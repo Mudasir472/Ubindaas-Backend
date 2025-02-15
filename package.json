@@ -1,0 +1,33 @@
+{
+  "name": "ubindass-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "mongoose": "^7.x.x",
+    "ejs": "^3.1.x",
+    "express-ejs-layouts": "^2.5.x",
+    "dotenv": "^16.x.x",
+    "bcryptjs": "^2.4.x",
+    "jsonwebtoken": "^9.x.x",
+    "multer": "^1.4.x",
+    "express-validator": "^7.x.x",
+    "cors": "^2.8.x",
+    "helmet": "^7.x.x",
+    "morgan": "^1.10.x",
+    "winston": "^3.x.x",
+    "connect-flash": "^0.1.x",
+    "express-session": "^1.17.x",
+    "method-override": "^3.0.x"
+  },
+  "devDependencies": {
+    "nodemon": "^3.x.x"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
