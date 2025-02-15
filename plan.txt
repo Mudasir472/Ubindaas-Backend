@@ -1,8 +1,8 @@
 Phase 1: Project Setup & Authentication (Week 1)
 
-Basic Express.js setup with middleware
-Database connection setup
-Environment configuration
+Basic Express.js setup with middleware -done
+Database connection setup -done
+Environment configuration -done
 Authentication system implementation
 
 Admin registration
