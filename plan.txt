@@ -3,17 +3,16 @@ Phase 1: Project Setup & Authentication (Week 1)
 Basic Express.js setup with middleware -done
 Database connection setup -done
 Environment configuration -done
-Authentication system implementation
-
-Admin registration
-Login with JWT
-Password reset functionality
+Authentication system implementation -done
+ 
+Admin registration -done
+Login with JWT -done
+Password reset functionality not needed
 
 
 Phase 2: Category Management (Week 1)
 
-Super category CRUD
-Sub category CRUD
+
 Category validation
 Category listing with filters
 

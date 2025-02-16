@@ -12,7 +12,7 @@ require('dotenv').config();
 const app = express();
 
 // Import routes
-const adminAuthRoutes = require('./routes/admin/adminAuthRoutes');
+// const adminAuthRoutes = require('./routes/admin/adminAuthRoutes');
 const adminAuthRoutes = require('./routes/admin/adminAuthRoutes');
 const adminCategoryRoutes = require('./routes/admin/adminCategoryRoutes');
 

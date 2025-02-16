@@ -1,15 +1,19 @@
 const express = require('express');
 const router = express.Router();
 const { adminProtect } = require('../../middlewares/authMiddleware');
-const categoryController = require('../../controllers/admin/adminCategoryController');
-const upload = require('../../middlewares/uploadMiddleware');
+const adminCategoryController = require('../../controllers/admin/adminCategoryController');
 
-// Super Category Routes
-router.get('/super', adminProtect, categoryController.listSuperCategories);
-router.get('/super/create', adminProtect, categoryController.createSuperCategoryForm);
-router.post('/super/create', adminProtect, upload.single('image'), categoryController.createSuperCategory);
-router.get('/super/edit/:id', adminProtect, categoryController.editSuperCategoryForm);
-router.put('/super/edit/:id', adminProtect, upload.single('image'), categoryController.updateSuperCategory);
-router.delete('/super/:id', adminProtect, categoryController.deleteSuperCategory);
+// Add a test route to verify basic rendering
+router.get('/test', adminProtect, (req, res) => {
+    res.send('Category route is working');
+});
+
+// Main routes
+router.get('/', adminProtect, adminCategoryController.listCategories);
+router.get('/create', adminProtect, adminCategoryController.createCategoryForm);
+router.post('/create', adminProtect, adminCategoryController.createCategory);
+router.get('/edit/:id', adminProtect, adminCategoryController.editCategoryForm);
+router.put('/edit/:id', adminProtect, adminCategoryController.updateCategory);
+router.delete('/:id', adminProtect, adminCategoryController.deleteCategory);
 
 module.exports = router;
