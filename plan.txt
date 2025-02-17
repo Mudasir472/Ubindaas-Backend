@@ -10,7 +10,7 @@ Login with JWT -done
 Password reset functionality not needed
 
 
-Phase 2: Category Management (Week 1)
+Phase 2: Category Management (Week 1) -done
 
 
 Category validation

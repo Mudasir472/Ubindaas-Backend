@@ -73,20 +73,30 @@
                     </div>
 
                     <!-- Product Management -->
-                    <div class="col-md-4">
-                        <div class="card h-100">
-                            <div class="card-body">
-                                <h5 class="card-title">
-                                    <i class="bi bi-box"></i> Product Management
-                                </h5>
-                                <p class="card-text">Add and manage products in your inventory.</p>
-                                <div class="btn-group">
-                                    <a href="/admin/products?section=men" class="btn btn-outline-primary">Men's Products</a>
-                                    <a href="/admin/products?section=women" class="btn btn-outline-primary">Women's Products</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                   <!-- Product Management Card in dashboard -->
+<div class="col-md-4">
+    <div class="card h-100">
+        <div class="card-body">
+            <h5 class="card-title">
+                <i class="bi bi-box"></i> Product Management
+            </h5>
+            <p class="card-text">Add and manage products in your inventory.</p>
+            <div class="d-grid gap-2">
+                <div class="btn-group">
+                    <a href="/admin/products?gender=men" class="btn btn-outline-primary">
+                        <i class="bi bi-gender-male"></i> Men's Products
+                    </a>
+                    <a href="/admin/products?gender=women" class="btn btn-outline-primary">
+                        <i class="bi bi-gender-female"></i> Women's Products
+                    </a>
+                </div>
+                <a href="/admin/products/create" class="btn btn-success">
+                    <i class="bi bi-plus-circle"></i> Add New Product
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
 
                     <!-- Order Management -->
                     <div class="col-md-4">

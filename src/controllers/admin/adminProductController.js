@@ -1,152 +1,310 @@
 const Product = require('../../models/Product');
-const SuperCategory = require('../../models/SuperCategory');
-const SubCategory = require('../../models/SubCategory');
+const Category = require('../../models/Category');
+const fs = require('fs').promises;
+const path = require('path');
 
+// Helper function to delete file
+const deleteFile = async (filename) => {
+    try {
+        const filePath = path.join(__dirname, '../../public/uploads/products', filename);
+        await fs.unlink(filePath);
+    } catch (error) {
+        console.error('Error deleting file:', error);
+    }
+};
+
+// List products
 exports.listProducts = async (req, res) => {
     try {
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
-        const skip = (page - 1) * limit;
+        const gender = req.query.gender || 'men';
+        console.log('Requesting products for gender:', gender);
 
-        const products = await Product.find()
-            .populate('superCategory', 'name')
-            .populate('subCategory', 'name')
-            .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(limit);
+        const products = await Product.find({ gender: gender.toLowerCase() })
+            .populate('category')
+            .sort({ createdAt: -1 });
 
-        const total = await Product.countDocuments();
+        console.log(`Found ${products.length} products`);
 
         res.render('admin/products/list', {
             products,
-            current: page,
-            pages: Math.ceil(total / limit),
-            title: 'Products'
+            gender,
+            title: `${gender.charAt(0).toUpperCase() + gender.slice(1)}'s Products`,
+            success_msg: req.flash('success_msg'),
+            error_msg: req.flash('error_msg')
         });
     } catch (error) {
+        console.error('Error in listProducts:', error);
         req.flash('error_msg', 'Error fetching products');
         res.redirect('/admin/dashboard');
     }
 };
 
+// Show create form
 exports.createProductForm = async (req, res) => {
     try {
-        const superCategories = await SuperCategory.find({ status: 'active' });
-        const subCategories = await SubCategory.find({ status: 'active' });
+        const gender = req.query.gender;
+        if (!gender || !['men', 'women'].includes(gender.toLowerCase())) {
+            req.flash('error_msg', 'Invalid gender specified');
+            return res.redirect('/admin/products?gender=men');
+        }
+
+        const categories = await Category.find({ 
+            gender: gender.toLowerCase(), 
+            status: 'active' 
+        });
 
         res.render('admin/products/create', {
-            superCategories,
-            subCategories,
-            title: 'Create Product'
+            categories,
+            gender,
+            title: `Create ${gender}'s Product`,
+            success_msg: req.flash('success_msg'),
+            error_msg: req.flash('error_msg')
         });
     } catch (error) {
+        console.error('Error in createProductForm:', error);
         req.flash('error_msg', 'Error loading form');
-        res.redirect('/admin/products');
+        res.redirect('/admin/products?gender=men');
     }
 };
+
+// Create product
+// In adminProductController.js
 
 exports.createProduct = async (req, res) => {
     try {
+        const gender = req.query.gender || req.body.gender;
+        console.log('Creating product with gender from query:', req.query.gender);
+        console.log('Creating product with gender from body:', req.body.gender);
+
+        if (!gender || !['men', 'women'].includes(gender.toLowerCase())) {
+            console.log('Invalid gender:', gender);
+            req.flash('error_msg', 'Invalid gender specified');
+            return res.redirect('/admin/products?gender=men');
+        }
+
         const {
             name,
             description,
-            superCategory,
-            subCategory,
+            category,
             price,
             salePrice,
+            sizes,
+            colors,
             stock,
-            specifications,
-            status
+            status,
+            featured
         } = req.body;
 
-        // Handle image files
-        const images = req.files.map(file => file.filename);
+        // Handle images
+        const images = req.files ? req.files.map(file => file.filename) : [];
+        if (images.length === 0) {
+            req.flash('error_msg', 'At least one image is required');
+            return res.redirect(`/admin/products/create?gender=${gender}`);
+        }
 
-        // Parse specifications
-        const parsedSpecs = JSON.parse(specifications);
-
-        await Product.create({
+        // Create the product
+        const newProduct = await Product.create({
             name,
             description,
-            superCategory,
-            subCategory,
-            price,
-            salePrice,
-            stock,
+            gender: gender.toLowerCase(),
+            category,
+            price: parseFloat(price),
+            salePrice: salePrice ? parseFloat(salePrice) : undefined,
             images,
-            specifications: parsedSpecs,
-            status
+            sizes: Array.isArray(sizes) ? sizes : [sizes],
+            colors: colors ? JSON.parse(colors) : [],
+            stock: parseInt(stock),
+            status,
+            featured: featured === 'true'
         });
 
+        console.log('Created new product:', newProduct);
+
         req.flash('success_msg', 'Product created successfully');
-        res.redirect('/admin/products');
+        res.redirect(`/admin/products?gender=${gender.toLowerCase()}`);
     } catch (error) {
-        console.error('Error creating product:', error);
-        req.flash('error_msg', 'Error creating product');
-        res.redirect('/admin/products/create');
+        console.error('Error in createProduct:', error);
+        
+        // Clean up uploaded files in case of error
+        if (req.files) {
+            for (const file of req.files) {
+                await deleteFile(file.filename);
+            }
+        }
+        
+        req.flash('error_msg', 'Error creating product: ' + error.message);
+        res.redirect(`/admin/products/create?gender=${req.query.gender}`);
     }
 };
 
+exports.listProducts = async (req, res) => {
+    try {
+        const gender = (req.query.gender || 'men').toLowerCase();
+        console.log('Requesting products for gender:', gender);
+
+        // Debug: Show all products in database
+        const allProducts = await Product.find({});
+        console.log('All products in database:', JSON.stringify(allProducts, null, 2));
+
+        const products = await Product.find({ gender })
+            .populate('category')
+            .sort({ createdAt: -1 });
+
+        console.log(`Filtered products for gender '${gender}':`, products);
+
+        res.render('admin/products/list', {
+            products,
+            gender,
+            title: `${gender.charAt(0).toUpperCase() + gender.slice(1)}'s Products`,
+            success_msg: req.flash('success_msg'),
+            error_msg: req.flash('error_msg')
+        });
+    } catch (error) {
+        console.error('Error in listProducts:', error);
+        req.flash('error_msg', 'Error fetching products');
+        res.redirect('/admin/dashboard');
+    }
+};
+    
+// Show edit form
 exports.editProductForm = async (req, res) => {
     try {
-        const product = await Product.findById(req.params.id);
-        const superCategories = await SuperCategory.find({ status: 'active' });
-        const subCategories = await SubCategory.find({ status: 'active' });
+        const product = await Product.findById(req.params.id).populate('category');
+        if (!product) {
+            req.flash('error_msg', 'Product not found');
+            return res.redirect('/admin/products');
+        }
+
+        const categories = await Category.find({ 
+            gender: product.gender, 
+            status: 'active' 
+        });
 
         res.render('admin/products/edit', {
             product,
-            superCategories,
-            subCategories,
-            title: 'Edit Product'
+            categories,
+            title: 'Edit Product',
+            success_msg: req.flash('success_msg'),
+            error_msg: req.flash('error_msg')
         });
     } catch (error) {
+        console.error('Error in editProductForm:', error);
         req.flash('error_msg', 'Error loading product');
         res.redirect('/admin/products');
     }
 };
 
+// Update product
 exports.updateProduct = async (req, res) => {
     try {
         const {
             name,
             description,
-            superCategory,
-            subCategory,
+            category,
             price,
             salePrice,
+            sizes,
+            colors,
             stock,
-            specifications,
-            status
+            status,
+            featured,
+            existingImages
         } = req.body;
 
         const product = await Product.findById(req.params.id);
-
-        // Update images if new files uploaded
-        let images = product.images;
-        if (req.files && req.files.length > 0) {
-            images = req.files.map(file => file.filename);
+        if (!product) {
+            req.flash('error_msg', 'Product not found');
+            return res.redirect('/admin/products');
         }
 
-        // Parse specifications
-        const parsedSpecs = JSON.parse(specifications);
+        // Handle images
+        let updatedImages = existingImages ? (Array.isArray(existingImages) ? existingImages : [existingImages]) : [];
+        const removedImages = product.images.filter(img => !updatedImages.includes(img));
 
-        await Product.findByIdAndUpdate(req.params.id, {
+        // Delete removed images
+        for (const image of removedImages) {
+            await deleteFile(image);
+        }
+
+        // Add new images
+        if (req.files && req.files.length > 0) {
+            updatedImages = [...updatedImages, ...req.files.map(file => file.filename)];
+        }
+
+        const updateData = {
             name,
             description,
-            superCategory,
-            subCategory,
-            price,
-            salePrice,
-            stock,
-            images,
-            specifications: parsedSpecs,
-            status
-        });
+            category,
+            price: parseFloat(price),
+            salePrice: salePrice ? parseFloat(salePrice) : undefined,
+            sizes: JSON.parse(sizes),
+            colors: JSON.parse(colors),
+            stock: parseInt(stock),
+            status,
+            featured: featured === 'true',
+            images: updatedImages
+        };
 
+        await Product.findByIdAndUpdate(req.params.id, updateData);
         req.flash('success_msg', 'Product updated successfully');
-        res.redirect('/admin/products');
+        res.redirect('/admin/products?gender=' + product.gender);
     } catch (error) {
+        console.error('Error in updateProduct:', error);
         req.flash('error_msg', 'Error updating product');
         res.redirect(`/admin/products/edit/${req.params.id}`);
+    }
+};
+
+// Delete product
+exports.deleteProduct = async (req, res) => {
+    try {
+        const product = await Product.findById(req.params.id);
+        if (!product) {
+            return res.status(404).json({ success: false, message: 'Product not found' });
+        }
+
+        // Delete all associated images
+        for (const image of product.images) {
+            await deleteFile(image);
+        }
+
+        await Product.findByIdAndDelete(req.params.id);
+        
+        return res.json({ success: true, message: 'Product deleted successfully' });
+    } catch (error) {
+        console.error('Error in deleteProduct:', error);
+        return res.status(500).json({ success: false, message: 'Error deleting product' });
+    }
+};
+
+// Delete single image
+exports.deleteProductImage = async (req, res) => {
+    try {
+        const { id, filename } = req.params;
+        
+        const product = await Product.findById(id);
+        if (!product) {
+            return res.status(404).json({ success: false, message: 'Product not found' });
+        }
+
+        // Check if this is the last image
+        if (product.images.length <= 1) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Cannot delete the last image. Product must have at least one image.' 
+            });
+        }
+
+        // Remove image from array and save
+        product.images = product.images.filter(img => img !== filename);
+        await product.save();
+
+        // Delete file
+        await deleteFile(filename);
+
+        res.json({ success: true, message: 'Image deleted successfully' });
+    } catch (error) {
+        console.error('Error in deleteProductImage:', error);
+        res.status(500).json({ success: false, message: 'Error deleting image' });
     }
 };

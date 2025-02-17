@@ -4,26 +4,27 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start":"node src/server.js",
+    "start": "node src/server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "mongoose": "^7.x.x",
-    "ejs": "^3.1.x",
-    "express-ejs-layouts": "^2.5.x",
-    "dotenv": "^16.x.x",
     "bcryptjs": "^2.4.x",
-    "jsonwebtoken": "^9.x.x",
-    "multer": "^1.4.x",
-    "express-validator": "^7.x.x",
-    "cors": "^2.8.x",
-    "helmet": "^7.x.x",
-    "morgan": "^1.10.x",
-    "winston": "^3.x.x",
     "connect-flash": "^0.1.x",
+    "cors": "^2.8.x",
+    "dotenv": "^16.x.x",
+    "ejs": "^3.1.x",
+    "express": "^4.18.2",
+    "express-ejs-layouts": "^2.5.x",
     "express-session": "^1.17.x",
-    "method-override": "^3.0.x"
+    "express-validator": "^7.x.x",
+    "helmet": "^7.x.x",
+    "jsonwebtoken": "^9.x.x",
+    "method-override": "^3.0.x",
+    "mongoose": "^7.x.x",
+    "morgan": "^1.10.x",
+    "multer": "^1.4.x",
+    "slugify": "^1.6.6",
+    "winston": "^3.x.x"
   },
   "devDependencies": {
     "nodemon": "^3.x.x"
