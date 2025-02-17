@@ -116,3 +116,37 @@ exports.updateTracking = async (req, res) => {
         });
     }
 };
+
+
+// Add this function temporarily for testing
+exports.createTestOrder = async (req, res) => {
+    try {
+        const order = await Order.create({
+            customer: {
+                name: 'Test Customer',
+                email: 'test@example.com',
+                phone: '1234567890'
+            },
+            items: [{
+                product: '67b2b046f46fa0d28503c201', // Replace with an actual product ID from your database
+                quantity: 2,
+                price: 999,
+                size: 'M',
+                color: 'Blue'
+            }],
+            shippingAddress: {
+                street: '123 Test Street',
+                city: 'Test City',
+                state: 'Test State',
+                pincode: '123456'
+            },
+            totalAmount: 1998,
+            paymentMethod: 'cod'
+        });
+
+        res.json({ success: true, order });
+    } catch (error) {
+        console.error('Error creating test order:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+};

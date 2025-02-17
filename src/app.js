@@ -16,6 +16,9 @@ const app = express();
 const adminAuthRoutes = require('./routes/admin/adminAuthRoutes');
 const adminCategoryRoutes = require('./routes/admin/adminCategoryRoutes');
 const adminProductRoutes = require('./routes/admin/adminProductRoutes');
+const adminOrderRoutes = require('./routes/admin/adminOrderRoutes');
+const adminCustomerRoutes = require('./routes/admin/adminCustomerRoutes');
+const adminDashboardRoutes = require('./routes/admin/adminDashboardRoutes'); 
 
 // Middleware
 app.use(express.json());
@@ -55,7 +58,10 @@ app.use((req, res, next) => {
 
 // Routes
 app.use('/admin', adminAuthRoutes);
+app.use('/admin/dashboard', adminDashboardRoutes); 
 app.use('/admin/categories', adminCategoryRoutes);
 app.use('/admin/products', adminProductRoutes);
+app.use('/admin/orders', adminOrderRoutes);
+app.use('/admin/customers', adminCustomerRoutes);
 
 module.exports = app;

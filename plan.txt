@@ -18,7 +18,7 @@ Category listing with filters
 
 
 
-Phase 3: Product Management (Week 2)
+Phase 3: Product Management (Week 2)  -done
 
 Product model implementation
 Image upload functionality
@@ -27,7 +27,7 @@ Product search and filtering
 Bulk product upload
 
 
-Phase 4: Order Management (Week 2)
+Phase 4: Order Management (Week 2) -done
 
 Order model implementation
 Order creation and listing
@@ -36,7 +36,7 @@ Order tracking implementation
 Order analytics
 
 
-Phase 5: Customer Management (Week 3)
+Phase 5: Customer Management (Week 3) - done
 
 Customer model implementation
 Customer CRUD operations
