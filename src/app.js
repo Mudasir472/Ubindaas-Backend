@@ -19,6 +19,9 @@ const adminProductRoutes = require('./routes/admin/adminProductRoutes');
 const adminOrderRoutes = require('./routes/admin/adminOrderRoutes');
 const adminCustomerRoutes = require('./routes/admin/adminCustomerRoutes');
 const adminDashboardRoutes = require('./routes/admin/adminDashboardRoutes'); 
+const adminSettingRoutes = require('./routes/admin/adminSettingRoutes');
+//const { errorHandler, notFound } = require('./middlewares/errorMiddleware');
+
 
 // Middleware
 app.use(express.json());
@@ -29,6 +32,10 @@ app.use(helmet({
 }));
 app.use(morgan('dev'));
 app.use(methodOverride('_method'));
+// // Error Handling
+// app.use(notFound);
+// app.use(errorHandler);
+
 
 // EJS Setup
 app.set('view engine', 'ejs');
@@ -63,5 +70,6 @@ app.use('/admin/categories', adminCategoryRoutes);
 app.use('/admin/products', adminProductRoutes);
 app.use('/admin/orders', adminOrderRoutes);
 app.use('/admin/customers', adminCustomerRoutes);
+app.use('/admin/settings', adminSettingRoutes);
 
 module.exports = app;

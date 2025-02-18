@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Store Settings - Ubindass Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <%- include('../partials/sidebar') %>
+
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">Store Settings</h1>
+                </div>
+
+                <!-- Alert Messages -->
+                <% if(success_msg && success_msg.length > 0) { %>
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <%= success_msg %>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                <% } %>
+
+                <% if(error_msg && error_msg.length > 0) { %>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <%= error_msg %>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                <% } %>
+
+                <!-- Settings Form -->
+                <form action="/admin/settings/update" method="POST" enctype="multipart/form-data">
+                    <!-- Store Information -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Store Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="storeName" class="form-label">Store Name</label>
+                                    <input type="text" class="form-control" id="storeName" name="storeName" 
+                                           value="<%= settings.storeName %>" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="logo" class="form-label">Store Logo</label>
+                                    <input type="file" class="form-control" id="logo" name="logo" accept="image/*">
+                                    <% if(settings.logo) { %>
+                                        <img src="/uploads/<%= settings.logo %>" alt="Store Logo" class="mt-2" style="height: 50px;">
+                                    <% } %>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact Information -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Contact Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="email" class="form-label">Email Address</label>
+                                    <input type="email" class="form-control" id="email" name="email" 
+                                           value="<%= settings.contact.email %>" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="phone" class="form-label">Phone Number</label>
+                                    <input type="text" class="form-control" id="phone" name="phone" 
+                                           value="<%= settings.contact.phone %>" required>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-12 mb-3">
+                                    <label for="address" class="form-label">Store Address</label>
+                                    <textarea class="form-control" id="address" name="address[street]" rows="3"><%= settings.contact.address?.street || '' %></textarea>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label for="city" class="form-label">City</label>
+                                    <input type="text" class="form-control" id="city" name="address[city]" 
+                                           value="<%= settings.contact.address?.city || '' %>">
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label for="state" class="form-label">State</label>
+                                    <input type="text" class="form-control" id="state" name="address[state]" 
+                                           value="<%= settings.contact.address?.state || '' %>">
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label for="pincode" class="form-label">Pincode</label>
+                                    <input type="text" class="form-control" id="pincode" name="address[pincode]" 
+                                           value="<%= settings.contact.address?.pincode || '' %>">
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label for="country" class="form-label">Country</label>
+                                    <input type="text" class="form-control" id="country" name="address[country]" 
+                                           value="<%= settings.contact.address?.country || 'India' %>">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Social Links -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Social Media Links</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="facebook" class="form-label">Facebook</label>
+                                    <input type="url" class="form-control" id="facebook" name="socialLinks[facebook]" 
+                                           value="<%= settings.socialLinks?.facebook || '' %>">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="instagram" class="form-label">Instagram</label>
+                                    <input type="url" class="form-control" id="instagram" name="socialLinks[instagram]" 
+                                           value="<%= settings.socialLinks?.instagram || '' %>">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="twitter" class="form-label">Twitter</label>
+                                    <input type="url" class="form-control" id="twitter" name="socialLinks[twitter]" 
+                                           value="<%= settings.socialLinks?.twitter || '' %>">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment Methods -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Payment Methods</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="cod" name="paymentMethods" value="cod"
+                                           <%= settings.payment.methods.find(m => m.name === 'cod' && m.active) ? 'checked' : '' %>>
+                                    <label class="form-check-label" for="cod">
+                                        Cash on Delivery (COD)
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="online" name="paymentMethods" value="online"
+                                           <%= settings.payment.methods.find(m => m.name === 'online' && m.active) ? 'checked' : '' %>>
+                                    <label class="form-check-label" for="online">
+                                        Online Payment
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div id="onlinePaymentSettings" class="<%= settings.payment.methods.find(m => m.name === 'online' && m.active) ? '' : 'd-none' %>">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="razorpayKey" class="form-label">Razorpay Key</label>
+                                        <input type="text" class="form-control" id="razorpayKey" name="razorpayKey" 
+                                               value="<%= settings.payment.razorpayKey || '' %>">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="razorpaySecret" class="form-label">Razorpay Secret</label>
+                                        <input type="password" class="form-control" id="razorpaySecret" name="razorpaySecret" 
+                                               value="<%= settings.payment.razorpaySecret || '' %>">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- SEO Settings -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">SEO Settings</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-12 mb-3">
+                <label for="metaTitle" class="form-label">Meta Title</label>
+                <input type="text" class="form-control" id="metaTitle" name="seo[metaTitle]" 
+                       value="<%= settings.seo?.metaTitle || '' %>"
+                       placeholder="e.g., Ubindass - Premium Fashion Store">
+                <small class="text-muted">Recommended length: 50-60 characters</small>
+            </div>
+            <div class="col-md-12 mb-3">
+                <label for="metaDescription" class="form-label">Meta Description</label>
+                <textarea class="form-control" id="metaDescription" name="seo[metaDescription]" 
+                          rows="3" placeholder="Brief description of your store"><%= settings.seo?.metaDescription || '' %></textarea>
+                <small class="text-muted">Recommended length: 150-160 characters</small>
+            </div>
+            <div class="col-md-12 mb-3">
+                <label for="keywords" class="form-label">Meta Keywords</label>
+                <input type="text" class="form-control" id="keywords" name="seo[keywords]" 
+                       value="<%= settings.seo?.keywords?.join(', ') || '' %>"
+                       placeholder="e.g., fashion, clothing, accessories">
+                <small class="text-muted">Separate keywords with commas</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+                    <!-- Submit Button -->
+                    <div class="text-end mb-4">
+                        <button type="submit" class="btn btn-primary">Save Settings</button>
+                    </div>
+                    
+                </form>
+                
+            </main>
+        </div>
+    </div>
+    
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Toggle online payment settings
+        document.getElementById('online').addEventListener('change', function() {
+            const settings = document.getElementById('onlinePaymentSettings');
+            settings.classList.toggle('d-none', !this.checked);
+        });
+    </script>
+</body>
+</html>

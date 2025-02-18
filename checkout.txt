@@ -1,0 +1,72 @@
+// Initialize Razorpay
+const initializePayment = async (orderId, amount) => {
+    try {
+        // First, create Razorpay order
+        const response = await fetch('/api/payment/create-order', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                amount,
+                orderId
+            })
+        });
+
+        const data = await response.json();
+        if (!data.success) throw new Error('Failed to create order');
+
+        // Initialize Razorpay
+        const options = {
+            key: 'YOUR_RAZORPAY_KEY_ID', // Get from settings
+            amount: data.order.amount,
+            currency: "INR",
+            name: "Ubindass",
+            description: "Order Payment",
+            order_id: data.order.id,
+            handler: async function (response) {
+                // Verify payment
+                await verifyPayment(response);
+            },
+            prefill: {
+                name: customerName,
+                email: customerEmail,
+                contact: customerPhone
+            },
+            theme: {
+                color: "#3399cc"
+            }
+        };
+
+        const rzp = new Razorpay(options);
+        rzp.open();
+
+    } catch (error) {
+        console.error('Payment error:', error);
+        alert('Payment initialization failed');
+    }
+};
+
+// Verify payment
+const verifyPayment = async (response) => {
+    try {
+        const result = await fetch('/api/payment/verify', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(response)
+        });
+
+        const data = await result.json();
+        if (data.success) {
+            // Payment successful
+            window.location.href = '/order/success';
+        } else {
+            alert('Payment verification failed');
+        }
+    } catch (error) {
+        console.error('Verification error:', error);
+        alert('Payment verification failed');
+    }
+};
