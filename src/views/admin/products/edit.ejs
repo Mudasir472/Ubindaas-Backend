@@ -38,6 +38,31 @@
             align-items: center;
             justify-content: center;
         }
+        .video-preview {
+            max-width: 100%;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .video-container {
+            position: relative;
+            margin-top: 15px;
+        }
+        .remove-video {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 0, 0, 0.7);
+            color: white;
+            border-radius: 50%;
+            padding: 5px;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
     </style>
 </head>
 <body>
@@ -154,6 +179,43 @@
                                         <div class="preview-container" id="imagePreview"></div>
                                     </div>
 
+                                    <!-- Video Section -->
+                                    <div class="mb-4">
+                                        <label class="form-label">Product Video</label>
+                                        
+                                        <!-- Current Video (if exists) -->
+                                        <% if (product.video) { %>
+                                            <div class="video-container" id="videoContainer">
+                                                <video class="video-preview" controls>
+                                                    <source src="/uploads/videos/<%= product.video %>" type="video/mp4">
+                                                    Your browser does not support the video tag.
+                                                </video>
+                                                <span class="remove-video" onclick="removeCurrentVideo()">×</span>
+                                                <input type="hidden" id="removeVideoField" name="removeVideo" value="false">
+                                            </div>
+                                        <% } else { %>
+                                            <div id="videoContainer" style="display: none;">
+                                                <video class="video-preview" controls></video>
+                                                <input type="hidden" id="removeVideoField" name="removeVideo" value="false">
+                                            </div>
+                                        <% } %>
+                                        
+                                        <!-- Upload New Video -->
+                                        <div class="mt-3">
+                                            <label for="video" class="form-label">
+                                                <% if (product.video) { %>
+                                                    Upload New Video (will replace current video)
+                                                <% } else { %>
+                                                    Upload Video
+                                                <% } %>
+                                            </label>
+                                            <input type="file" class="form-control" id="video" name="video" accept="video/*">
+                                            <small class="text-muted">Supported formats: MP4, MOV, AVI, WEBM (max size: 50MB)</small>
+                                        </div>
+                                        
+                                        <div class="preview-container" id="videoPreview"></div>
+                                    </div>
+
                                     <!-- Status and Featured -->
                                     <div class="row">
                                         <div class="col-md-6">
@@ -205,6 +267,10 @@
                                     </li>
                                     <li class="mb-2">
                                         <i class="bi bi-check2 text-success"></i>
+                                        Add a product video to showcase details
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="bi bi-check2 text-success"></i>
                                         Adjust stock and pricing
                                     </li>
                                     <li class="mb-2">
@@ -224,4 +290,95 @@
     <script>
         // Image preview functionality
         document.getElementById('images').addEventListener('change', function(e) {
-            const preview =
+            const preview = document.getElementById('imagePreview');
+            preview.innerHTML = '';
+            
+            if (this.files) {
+                [...this.files].forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const div = document.createElement('div');
+                        div.className = 'preview-item';
+                        
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.className = 'image-preview';
+                        
+                        div.appendChild(img);
+                        preview.appendChild(div);
+                    }
+                    reader.readAsDataURL(file);
+                });
+            }
+        });
+
+        // Video preview functionality
+        document.getElementById('video').addEventListener('change', function(e) {
+            if (this.files && this.files[0]) {
+                const file = this.files[0];
+                const videoURL = URL.createObjectURL(file);
+                
+                // If there's an existing video, set removeVideo to true
+                // since uploading a new video will replace it
+                if (document.querySelector('#videoContainer video source')) {
+                    document.getElementById('removeVideoField').value = 'true';
+                }
+                
+                // Preview the new video
+                const preview = document.getElementById('videoPreview');
+                preview.innerHTML = '';
+                
+                const div = document.createElement('div');
+                div.className = 'video-container';
+                
+                const video = document.createElement('video');
+                video.className = 'video-preview';
+                video.controls = true;
+                
+                const source = document.createElement('source');
+                source.src = videoURL;
+                source.type = file.type;
+                
+                video.appendChild(source);
+                div.appendChild(video);
+                preview.appendChild(div);
+            }
+        });
+
+        // Remove image handler
+        function removeImage(element) {
+            if (confirm('Are you sure you want to remove this image?')) {
+                const imageFilename = element.getAttribute('data-image');
+                const productId = '<%= product._id %>';
+                
+                fetch(`/admin/products/${productId}/image/${imageFilename}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        element.parentElement.remove();
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while deleting the image');
+                });
+            }
+        }
+
+        // Remove current video handler
+        function removeCurrentVideo() {
+            if (confirm('Are you sure you want to remove this video?')) {
+                document.getElementById('removeVideoField').value = 'true';
+                document.getElementById('videoContainer').style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

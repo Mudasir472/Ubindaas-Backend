@@ -12,11 +12,21 @@ router.get('/', adminProtect, (req, res) => {
     adminProductController.listProducts(req, res);
 });
 
-// Make sure create route handles gender parameter
+// Configure upload fields for both images and video
+const uploadFields = upload.fields([
+    { name: 'images', maxCount: 5 },
+    { name: 'video', maxCount: 1 }
+]);
+
+// Define routes with updated upload middleware
 router.get('/create', adminProtect, adminProductController.createProductForm);
-router.post('/create', adminProtect, upload.array('images', 5), adminProductController.createProduct);
+router.post('/create', adminProtect, uploadFields, adminProductController.createProduct);
 router.get('/edit/:id', adminProtect, adminProductController.editProductForm);
-router.put('/edit/:id', adminProtect, upload.array('images', 5), adminProductController.updateProduct);
+router.put('/edit/:id', adminProtect, uploadFields, adminProductController.updateProduct);
 router.delete('/:id', adminProtect, adminProductController.deleteProduct);
+router.delete('/:id/image/:filename', adminProtect, adminProductController.deleteProductImage);
+
+// Only include this route if the method is implemented in your controller
+// router.delete('/:id/video', adminProtect, adminProductController.deleteProductVideo);
 
 module.exports = router;

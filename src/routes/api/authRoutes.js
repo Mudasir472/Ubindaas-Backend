@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const authController = require('../../controllers/api/authController');
+const authController = require('../../controllers/api/authController.js');
+
+console.log(authController); // Debugging line to check what is being imported
 
 router.post('/register', authController.register);
 router.post('/login', authController.login);

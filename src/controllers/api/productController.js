@@ -1,4 +1,5 @@
 const Product = require('../../models/Product');
+const Rating = require('../../models/Rating');
 
 exports.getProducts = async (req, res) => {
     try {
@@ -10,6 +11,7 @@ exports.getProducts = async (req, res) => {
         const maxPrice = req.query.maxPrice;
         const sortBy = req.query.sortBy || 'createdAt';
         const order = req.query.order || 'desc';
+        const minRating = parseInt(req.query.minRating) || 0;
 
         // Build query
         let query = { status: 'active' };
@@ -26,6 +28,11 @@ exports.getProducts = async (req, res) => {
             query.price = {};
             if (minPrice) query.price.$gte = parseFloat(minPrice);
             if (maxPrice) query.price.$lte = parseFloat(maxPrice);
+        }
+
+        // Filter by minimum rating if specified
+        if (minRating > 0) {
+            query.averageRating = { $gte: minRating };
         }
 
         // Get total count
@@ -148,6 +155,154 @@ exports.searchProducts = async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Error searching products'
+        });
+    }
+};
+
+exports.getProductsByCategory = async (req, res) => {
+    try {
+        const categoryId = req.params.categoryId;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 12;
+        
+        // Build query
+        const query = { 
+            category: categoryId,
+            status: 'active'
+        };
+        
+        // Get total count
+        const total = await Product.countDocuments(query);
+        
+        // Execute query
+        const products = await Product.find(query)
+            .populate('category')
+            .sort({ createdAt: -1 })
+            .skip((page - 1) * limit)
+            .limit(limit);
+            
+        res.json({
+            success: true,
+            data: {
+                products,
+                currentPage: page,
+                totalPages: Math.ceil(total / limit),
+                total
+            }
+        });
+    } catch (error) {
+        console.error('Error in getProductsByCategory:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching products by category'
+        });
+    }
+};
+
+exports.getFeaturedProducts = async (req, res) => {
+    try {
+        const limit = parseInt(req.query.limit) || 8;
+        
+        const products = await Product.find({ 
+            featured: true,
+            status: 'active'
+        })
+        .populate('category')
+        .sort({ createdAt: -1 })
+        .limit(limit);
+        
+        res.json({
+            success: true,
+            data: products
+        });
+    } catch (error) {
+        console.error('Error in getFeaturedProducts:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching featured products'
+        });
+    }
+};
+
+// New method to get top-rated products
+exports.getTopRatedProducts = async (req, res) => {
+    try {
+        const limit = parseInt(req.query.limit) || 8;
+        const minRating = parseFloat(req.query.minRating) || 4.0;
+        const minReviews = parseInt(req.query.minReviews) || 1;
+        
+        const products = await Product.find({ 
+            status: 'active',
+            averageRating: { $gte: minRating },
+            ratingCount: { $gte: minReviews }
+        })
+        .populate('category')
+        .sort({ averageRating: -1, ratingCount: -1 })
+        .limit(limit);
+        
+        res.json({
+            success: true,
+            data: products
+        });
+    } catch (error) {
+        console.error('Error in getTopRatedProducts:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching top-rated products'
+        });
+    }
+};
+
+// Get product ratings
+exports.getProductRatings = async (req, res) => {
+    try {
+        const productId = req.params.id;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 5;
+        
+        // Get approved ratings for the product
+        const ratings = await Rating.find({
+            productId: productId,
+            status: 'approved'
+        })
+        .populate('userId', 'name avatar')
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit);
+        
+        // Get total count
+        const total = await Rating.countDocuments({
+            productId: productId,
+            status: 'approved'
+        });
+        
+        // Get rating distribution
+        const distribution = await Rating.aggregate([
+            { $match: { productId: mongoose.Types.ObjectId(productId), status: 'approved' } },
+            { $group: { _id: '$rating', count: { $sum: 1 } } }
+        ]);
+        
+        // Format distribution
+        const formattedDistribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+        distribution.forEach(item => {
+            formattedDistribution[item._id] = item.count;
+        });
+        
+        res.json({
+            success: true,
+            data: {
+                ratings,
+                currentPage: page,
+                totalPages: Math.ceil(total / limit),
+                total,
+                distribution: formattedDistribution
+            }
+        });
+    } catch (error) {
+        console.error('Error in getProductRatings:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching product ratings'
         });
     }
 };
