@@ -20,15 +20,28 @@ exports.getCategories = async (req, res) => {
 exports.getCategoriesByGender = async (req, res) => {
     try {
         const { gender } = req.params;
-        const categories = await Category.find({ 
+        const categories = await Category.find({
             gender: gender.toLowerCase(),
             status: 'active'
         });
+        const formattedCategories = {};
+
+        categories.forEach(cat => {
+            if (!formattedCategories[cat.name]) {
+                formattedCategories[cat.name] = { subcategories: [] };
+            }
+            formattedCategories[cat.name].subcategories.push({
+                title: cat.subcategoryTitle, // Ensure this exists in your DB
+                items: cat.subcategoryItems || [] // Ensure this is an array
+            });
+        });
+        console.log(formattedCategories);
 
         res.json({
             success: true,
-            data: categories
+            data: formattedCategories
         });
+
     } catch (error) {
         console.error('Error in getCategoriesByGender:', error);
         res.status(500).json({
@@ -43,13 +56,13 @@ exports.getCategoryProducts = async (req, res) => {
         const { id } = req.params;
         const { page = 1, limit = 12 } = req.query;
 
-        const products = await Product.find({ 
+        const products = await Product.find({
             category: id,
             status: 'active'
         })
-        .populate('category')
-        .skip((page - 1) * limit)
-        .limit(limit);
+            .populate('category')
+            .skip((page - 1) * limit)
+            .limit(limit);
 
         const total = await Product.countDocuments({ category: id, status: 'active' });
 

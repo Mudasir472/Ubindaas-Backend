@@ -66,7 +66,7 @@ exports.addRating = async (req, res) => {
 
     } catch (error) {
         console.error('Error in addRating:', error);
-        
+
         // Handle duplicate key error
         if (error.code === 11000) {
             return res.status(400).json({
@@ -74,7 +74,7 @@ exports.addRating = async (req, res) => {
                 message: 'You have already rated this product'
             });
         }
-        
+
         res.status(500).json({
             success: false,
             message: 'Error adding rating'
@@ -90,7 +90,7 @@ exports.addRating = async (req, res) => {
 exports.getProductRatings = async (req, res) => {
     try {
         const { productId } = req.params;
-        
+
         // Validate that productId is a valid ObjectId
         if (!mongoose.Types.ObjectId.isValid(productId)) {
             return res.status(400).json({
@@ -99,12 +99,12 @@ exports.getProductRatings = async (req, res) => {
             });
         }
 
-        const ratings = await Rating.find({ 
-            productId, 
-            status: 'approved' 
+        const ratings = await Rating.find({
+            productId,
+            status: 'approved'
         })
-        .populate('userId', 'name avatar') // Get user info without sensitive data
-        .sort({ createdAt: -1 });
+            .populate('userId', 'name avatar') // Get user info without sensitive data
+            .sort({ createdAt: -1 });
 
         res.json({
             success: true,
@@ -127,7 +127,7 @@ exports.getProductRatings = async (req, res) => {
 exports.getAverageRating = async (req, res) => {
     try {
         const { productId } = req.params;
-        
+
         // Validate that productId is a valid ObjectId
         if (!mongoose.Types.ObjectId.isValid(productId)) {
             return res.status(400).json({
@@ -138,15 +138,15 @@ exports.getAverageRating = async (req, res) => {
 
         const result = await Rating.aggregate([
             { $match: { productId: mongoose.Types.ObjectId(productId), status: 'approved' } },
-            { 
-                $group: { 
-                    _id: null, 
+            {
+                $group: {
+                    _id: null,
                     averageRating: { $avg: '$rating' },
                     count: { $sum: 1 },
                     ratings: {
                         $push: '$rating'
                     }
-                } 
+                }
             }
         ]);
 
@@ -194,14 +194,14 @@ exports.getAverageRating = async (req, res) => {
 exports.deleteRating = async (req, res) => {
     try {
         const rating = await Rating.findById(req.params.id);
-        
+
         if (!rating) {
             return res.status(404).json({
                 success: false,
                 message: 'Rating not found'
             });
         }
-        
+
         // Check if the user is the owner of the rating
         if (rating.userId.toString() !== req.user._id.toString()) {
             return res.status(403).json({
@@ -209,12 +209,12 @@ exports.deleteRating = async (req, res) => {
                 message: 'Not authorized to delete this rating'
             });
         }
-        
+
         await Rating.findByIdAndDelete(req.params.id);
-        
+
         // Update product average rating in the background
         updateProductAverageRating(rating.productId);
-        
+
         res.json({
             success: true,
             message: 'Rating deleted successfully'
@@ -240,21 +240,21 @@ exports.getAllRatings = async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 20;
         const status = req.query.status || 'pending';
-        
+
         const filter = {};
         if (status !== 'all') {
             filter.status = status;
         }
-        
+
         const total = await Rating.countDocuments(filter);
-        
+
         const ratings = await Rating.find(filter)
             .populate('userId', 'name email')
             .populate('productId', 'name images')
             .sort({ createdAt: -1 })
             .skip((page - 1) * limit)
             .limit(limit);
-        
+
         res.json({
             success: true,
             data: {
@@ -281,30 +281,29 @@ exports.getAllRatings = async (req, res) => {
 exports.updateRatingStatus = async (req, res) => {
     try {
         const { status } = req.body;
-        
+
         if (!['pending', 'approved', 'rejected'].includes(status)) {
             return res.status(400).json({
                 success: false,
                 message: 'Invalid status value'
             });
         }
-        
+
         const rating = await Rating.findByIdAndUpdate(
             req.params.id,
             { status },
             { new: true }
         );
-        
+
         if (!rating) {
             return res.status(404).json({
                 success: false,
                 message: 'Rating not found'
             });
         }
-        
+
         // Update product average rating in the background
         updateProductAverageRating(rating.productId);
-        
         res.json({
             success: true,
             data: rating,
@@ -319,6 +318,23 @@ exports.updateRatingStatus = async (req, res) => {
     }
 };
 
+exports.getRatings = async (req, res) => {
+    try {
+        const allRatings = await Rating.find({});
+        res.status(200).json({
+            success:true,
+            ratings:allRatings
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            error: error.message
+        })
+
+    }
+}
+
 /**
  * Helper function to update product's average rating
  */
@@ -326,28 +342,28 @@ async function updateProductAverageRating(productId) {
     try {
         const result = await Rating.aggregate([
             { $match: { productId: mongoose.Types.ObjectId(productId), status: 'approved' } },
-            { 
-                $group: { 
-                    _id: null, 
+            {
+                $group: {
+                    _id: null,
                     averageRating: { $avg: '$rating' },
-                    count: { $sum: 1 } 
-                } 
+                    count: { $sum: 1 }
+                }
             }
         ]);
-        
+
         let avgRating = 0;
         let ratingCount = 0;
-        
+
         if (result.length > 0) {
             avgRating = Math.round(result[0].averageRating * 10) / 10; // Round to 1 decimal place
             ratingCount = result[0].count;
         }
-        
-        await Product.findByIdAndUpdate(productId, { 
+
+        await Product.findByIdAndUpdate(productId, {
             averageRating: avgRating,
-            ratingCount: ratingCount 
+            ratingCount: ratingCount
         });
-        
+
     } catch (error) {
         console.error('Error updating product average rating:', error);
     }

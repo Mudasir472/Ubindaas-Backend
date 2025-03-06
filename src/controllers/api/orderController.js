@@ -51,7 +51,25 @@ exports.createOrder = async (req, res) => {
         });
     }
 };
+exports.getUserOrders = async (req, res) => {
+    try {
+        const allOrders = await Order.find({});
+        if (!allOrders) {
+            return res.status(400).json({
+                success: false,
+                message: "Not any Order yet"
+            })
+        }
+        return res.status(200).json({
+            success: true,
+            orders: allOrders
+        })
 
+    } catch (err) {
+        console.log(err);
+
+    }
+}
 exports.getOrderById = async (req, res) => {
     try {
         const order = await Order.findById(req.params.id)
@@ -63,7 +81,6 @@ exports.getOrderById = async (req, res) => {
                 message: 'Order not found'
             });
         }
-
         res.json({
             success: true,
             data: order

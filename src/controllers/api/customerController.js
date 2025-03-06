@@ -1,6 +1,8 @@
 const Customer = require('../../models/Customer');
 const Order = require('../../models/Order');
 const bcrypt = require('bcryptjs');
+const User = require('../../models/User');
+const Product = require('../../models/Product');
 
 // Get customer profile
 exports.getProfile = async (req, res) => {
@@ -24,26 +26,21 @@ exports.updateProfile = async (req, res) => {
     try {
         const { name, email, phone } = req.body;
 
-        // Check if email already exists
-        if (email !== req.customer.email) {
-            const existingCustomer = await Customer.findOne({ email });
-            if (existingCustomer) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Email already in use'
-                });
-            }
+        if (!email || !name || !phone) {
+            return res.status(302).json({
+                success: false,
+                message: "Enter all the fields"
+            })
         }
-
-        const customer = await Customer.findByIdAndUpdate(
-            req.customer._id,
+        const customer = await User.findByIdAndUpdate(
+            req.user._id,
             { name, email, phone },
             { new: true }
         ).select('-password');
 
         res.json({
             success: true,
-            data: customer
+            user: customer
         });
     } catch (error) {
         console.error('Error in updateProfile:', error);
@@ -60,7 +57,7 @@ exports.changePassword = async (req, res) => {
         const { currentPassword, newPassword } = req.body;
 
         // Verify current password
-        const isMatch = await bcrypt.compare(currentPassword, req.customer.password);
+        const isMatch = await bcrypt.compare(currentPassword, req.user.password);
         if (!isMatch) {
             return res.status(400).json({
                 success: false,
@@ -73,10 +70,9 @@ exports.changePassword = async (req, res) => {
         const hashedPassword = await bcrypt.hash(newPassword, salt);
 
         // Update password
-        await Customer.findByIdAndUpdate(req.customer._id, {
+        await User.findByIdAndUpdate(req.user._id, {
             password: hashedPassword
         });
-
         res.json({
             success: true,
             message: 'Password updated successfully'
@@ -92,9 +88,16 @@ exports.changePassword = async (req, res) => {
 
 // Address management
 exports.getAddresses = async (req, res) => {
+
     try {
-        const customer = await Customer.findById(req.customer._id).select('addresses');
-        res.json({
+        const customer = await User.findById(req.user._id).select('addresses');
+        if (!customer) {
+            return res.status(403).json({
+                success: false,
+                message: "You are not customer"
+            })
+        }
+        return res.json({
             success: true,
             data: customer.addresses
         });
@@ -110,26 +113,29 @@ exports.getAddresses = async (req, res) => {
 exports.addAddress = async (req, res) => {
     try {
         const { type, street, city, state, pincode, isDefault } = req.body;
-
-        const customer = await Customer.findById(req.customer._id);
-
+        const customer = await User.findById(req.user._id);
         // If new address is default, remove default from others
-        if (isDefault) {
-            customer.addresses.forEach(addr => addr.isDefault = false);
+        if (!customer) {
+            return res.status(404).json({ success: false, message: "Customer not found" });
         }
+        if (!customer.addresses) {
+            customer.addresses = [];
+        }
+        if (isDefault) {
+            customer.addresses = customer.addresses.map(addr => ({ ...addr, isDefault: false }));
+        }
+        const isDuplicate = customer.addresses.some(addr =>
+            addr.street === street && addr.city === city && addr.state === state && addr.pincode === pincode
+        );
 
-        customer.addresses.push({
-            type,
-            street,
-            city,
-            state,
-            pincode,
-            isDefault
-        });
+        if (isDuplicate) {
+            return res.status(400).json({ success: false, message: "Address already exists" });
+        }
+        customer.addresses.push({ type, street, city, state, pincode, isDefault });
 
         await customer.save();
 
-        res.json({
+        return res.status(200).json({
             success: true,
             data: customer.addresses
         });
@@ -137,6 +143,7 @@ exports.addAddress = async (req, res) => {
         console.error('Error in addAddress:', error);
         res.status(500).json({
             success: false,
+            err: error.message,
             message: 'Error adding address'
         });
     }
@@ -189,7 +196,7 @@ exports.updateAddress = async (req, res) => {
 
 exports.deleteAddress = async (req, res) => {
     try {
-        const customer = await Customer.findById(req.customer._id);
+        const customer = await User.findById(req.user._id);
         customer.addresses.pull(req.params.id);
         await customer.save();
 
@@ -250,5 +257,52 @@ exports.getOrderDetails = async (req, res) => {
             success: false,
             message: 'Error fetching order details'
         });
+    }
+};
+
+// getWishlist
+exports.getWishlist = async (req, res) => {
+    try {
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            error: error.message
+        })
+    }
+}
+
+exports.addToWishlist = async (req, res) => {
+    try {
+
+        const { productId, userId } = req.body;
+
+        if (!productId) {
+            return res.status(400).json({ success: false, message: "Product ID is required" });
+        }
+
+        // Check if the product exists
+        const product = await Product.findById(productId);
+        if (!product) {
+            return res.status(404).json({ success: false, message: "Product not found" });
+        }
+
+        // Find the user and update the wishlist
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        if (user.wishlist.includes(productId)) {
+            return res.status(400).json({ success: false, message: "Product already in wishlist" });
+        }
+
+        user.wishlist.push(productId);
+        await user.save();
+
+        res.status(200).json({ success: true, message: "Product added to wishlist" });
+    } catch (error) {
+        console.error("Wishlist Error:", error);
+        res.status(500).json({ success: false, message: "Server error" });
     }
 };

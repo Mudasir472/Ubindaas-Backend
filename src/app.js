@@ -32,11 +32,16 @@ const apiProductRoutes = require('./routes/api/productRoutes');
 const apiSettingRoutes = require('./routes/api/settingRoutes');
 const bannerApiRoutes = require('./routes/api/bannerRoutes');
 const ratingApiRoutes = require('./routes/api/ratingRoutes'); // New rating API routes
+const customerApiRoutes = require('./routes/api/customersRoutes')
 
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors());
+// app.use(cors());
+app.use(cors({
+    origin: ["http://localhost:3000"], // React frontend URL
+    credentials: true,
+}));
 app.use(helmet({
     contentSecurityPolicy: false,
 }));
@@ -92,6 +97,7 @@ app.use('/api/products', apiProductRoutes);
 app.use('/api/settings', apiSettingRoutes);
 app.use('/api/banners', bannerApiRoutes);
 app.use('/api/ratings', ratingApiRoutes); // Added API rating routes
+app.use('/api/customer', customerApiRoutes);
 
 // Base route
 app.get('/', (req, res) => {
