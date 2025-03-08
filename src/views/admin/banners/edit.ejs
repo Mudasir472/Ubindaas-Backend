@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,155 +17,199 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container-fluid">
         <div class="row">
             <%- include('../partials/sidebar') %>
 
-            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                    <h1 class="h2">Edit Banner</h1>
-                    <div class="btn-toolbar mb-2 mb-md-0">
-                        <a href="/admin/banners" class="btn btn-secondary">
-                            <i class="bi bi-arrow-left"></i> Back to Banners
-                        </a>
-                    </div>
-                </div>
-
-                <% if(error_msg && error_msg.length > 0) { %>
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <%= error_msg %>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                <% } %>
-
-                <div class="row">
-                    <div class="col-md-8">
-                        <div class="card">
-                            <div class="card-body">
-                                <form action="/admin/banners/edit/<%= banner._id %>?_method=PUT" method="POST" enctype="multipart/form-data">
-                                    <!-- Banner Content -->
-                                    <div class="mb-3">
-                                        <label for="title" class="form-label">Banner Title</label>
-                                        <input type="text" class="form-control" id="title" name="title" value="<%= banner.title %>" required>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label for="subtitle" class="form-label">Subtitle (Optional)</label>
-                                        <input type="text" class="form-control" id="subtitle" name="subtitle" value="<%= banner.subtitle || '' %>">
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label for="link" class="form-label">Link URL (Optional)</label>
-                                        <input type="text" class="form-control" id="link" name="link" value="<%= banner.link || '' %>" placeholder="e.g., /products?category=summer">
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label for="buttonText" class="form-label">Button Text</label>
-                                        <input type="text" class="form-control" id="buttonText" name="buttonText" value="<%= banner.buttonText || 'Shop Now' %>">
-                                    </div>
-
-                                    <!-- Current Banner Image -->
-                                    <div class="mb-3">
-                                        <label class="form-label">Current Image</label>
-                                        <div>
-                                            <img src="/uploads/banners/<%= banner.image %>" class="image-preview" alt="<%= banner.title %>">
-                                        </div>
-                                    </div>
-
-                                    <!-- New Banner Image -->
-                                    <div class="mb-3">
-                                        <label for="image" class="form-label">Change Image (Optional)</label>
-                                        <input type="file" class="form-control" id="image" name="image" accept="image/*">
-                                        <small class="text-muted">Leave empty to keep current image. Recommended size: 1200x500 pixels (5MB max)</small>
-                                        <img id="imagePreview" class="image-preview" style="display: none;" alt="New banner preview">
-                                    </div>
-
-                                    <!-- Settings -->
-                                    <div class="row">
-                                        <div class="col-md-4">
-                                            <div class="mb-3">
-                                                <label for="position" class="form-label">Position</label>
-                                                <input type="number" class="form-control" id="position" name="position" value="<%= banner.position || 0 %>" min="0">
-                                                <small class="text-muted">Lower numbers appear first</small>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="mb-3">
-                                                <label for="status" class="form-label">Status</label>
-                                                <select class="form-select" id="status" name="status">
-                                                    <option value="active" <%= banner.status === 'active' ? 'selected' : '' %>>Active</option>
-                                                    <option value="inactive" <%= banner.status === 'inactive' ? 'selected' : '' %>>Inactive</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="mb-3">
-                                                <label for="forGender" class="form-label">For Gender</label>
-                                                <select class="form-select" id="forGender" name="forGender">
-                                                    <option value="all" <%= banner.forGender === 'all' ? 'selected' : '' %>>All</option>
-                                                    <option value="men" <%= banner.forGender === 'men' ? 'selected' : '' %>>Men</option>
-                                                    <option value="women" <%= banner.forGender === 'women' ? 'selected' : '' %>>Women</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                                        <button type="button" class="btn btn-secondary me-md-2" onclick="history.back()">Cancel</button>
-                                        <button type="submit" class="btn btn-primary">Update Banner</button>
-                                    </div>
-                                </form>
-                            </div>
+                <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                    <div
+                        class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">Edit Banner</h1>
+                        <div class="btn-toolbar mb-2 mb-md-0">
+                            <a href="/admin/banners" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to Banners
+                            </a>
                         </div>
                     </div>
 
-                    <!-- Guidelines -->
-                    <div class="col-md-4">
-                        <div class="card">
-                            <div class="card-body">
-                                <h5 class="card-title">
-                                    <i class="bi bi-info-circle"></i> Banner Guidelines
-                                </h5>
-                                <ul class="list-unstyled mb-0">
-                                    <li class="mb-2">
-                                        <i class="bi bi-check2 text-success"></i>
-                                        Use high-quality, eye-catching images
-                                    </li>
-                                    <li class="mb-2">
-                                        <i class="bi bi-check2 text-success"></i>
-                                        Keep titles short and impactful
-                                    </li>
-                                    <li class="mb-2">
-                                        <i class="bi bi-check2 text-success"></i>
-                                        Use subtitles to add more context
-                                    </li>
-                                    <li class="mb-2">
-                                        <i class="bi bi-check2 text-success"></i>
-                                        Ensure the link goes to relevant products
-                                    </li>
-                                    <li class="mb-2">
-                                        <i class="bi bi-check2 text-success"></i>
-                                        Set position to control display order
-                                    </li>
-                                </ul>
-                            </div>
+                    <% if(error_msg && error_msg.length> 0) { %>
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <%= error_msg %>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                    aria-label="Close"></button>
                         </div>
-                    </div>
-                </div>
-            </main>
+                        <% } %>
+
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <form action="/admin/banners/edit/<%= banner._id %>?_method=PUT"
+                                                method="POST" enctype="multipart/form-data">
+                                                <!-- Banner Content -->
+                                                <div class="mb-3">
+                                                    <label for="title" class="form-label">Banner Title</label>
+                                                    <input type="text" class="form-control" id="title" name="title"
+                                                        value="<%= banner.title %>" required>
+                                                </div>
+
+                                                <div class="mb-3">
+                                                    <label for="subtitle" class="form-label">Subtitle (Optional)</label>
+                                                    <input type="text" class="form-control" id="subtitle"
+                                                        name="subtitle" value="<%= banner.subtitle || '' %>">
+                                                </div>
+
+                                                <div class="mb-3">
+                                                    <label for="link" class="form-label">Link URL (Optional)</label>
+                                                    <input type="text" class="form-control" id="link" name="link"
+                                                        value="<%= banner.link || '' %>"
+                                                        placeholder="e.g., /products?category=summer">
+                                                </div>
+
+
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <label for="buttonText" class="form-label">Button
+                                                                Text</label>
+                                                            <input type="text" class="form-control" id="buttonText"
+                                                                name="buttonText"
+                                                                value="<%= banner.buttonText || 'Shop Now' %>">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <div class="mb-3">
+                                                                <label for="bannerFor" class="form-label">Select
+                                                                    Type</label>
+                                                                <select class="form-select" id="bannerFor" required
+                                                                    name="bannerFor">
+                                                                    <option value="" disabled selected>Select</option>
+                                                                    <option value="carousal">Carousel</option>
+                                                                    <option value="offer">Offer</option>
+                                                                </select>
+                                                            </div>
+
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Current Banner Image -->
+                                                <div class="mb-3">
+                                                    <label class="form-label">Current Image</label>
+                                                    <div>
+                                                        <img src="/uploads/banners/<%= banner.image %>"
+                                                            class="image-preview" alt="<%= banner.title %>">
+                                                    </div>
+                                                </div>
+
+                                                <!-- New Banner Image -->
+                                                <div class="mb-3">
+                                                    <label for="image" class="form-label">Change Image
+                                                        (Optional)</label>
+                                                    <input type="file" class="form-control" id="image" name="image"
+                                                        accept="image/*">
+                                                    <small class="text-muted">Leave empty to keep current image.
+                                                        Recommended size: 1200x500 pixels (5MB max)</small>
+                                                    <img id="imagePreview" class="image-preview" style="display: none;"
+                                                        alt="New banner preview">
+                                                </div>
+
+                                                <!-- Settings -->
+                                                <div class="row">
+                                                    <div class="col-md-4">
+                                                        <div class="mb-3">
+                                                            <label for="position" class="form-label">Position</label>
+                                                            <input type="number" class="form-control" id="position"
+                                                                name="position" value="<%= banner.position || 0 %>"
+                                                                min="0">
+                                                            <small class="text-muted">Lower numbers appear first</small>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="mb-3">
+                                                            <label for="status" class="form-label">Status</label>
+                                                            <select class="form-select" id="status" name="status">
+                                                                <option value="active" <%=banner.status==='active'
+                                                                    ? 'selected' : '' %>>Active</option>
+                                                                <option value="inactive" <%=banner.status==='inactive'
+                                                                    ? 'selected' : '' %>>Inactive</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="mb-3">
+                                                            <label for="forGender" class="form-label">For Gender</label>
+                                                            <select class="form-select" id="forGender" name="forGender">
+                                                                <option value="all" <%=banner.forGender==='all'
+                                                                    ? 'selected' : '' %>>All</option>
+                                                                <option value="men" <%=banner.forGender==='men'
+                                                                    ? 'selected' : '' %>>Men</option>
+                                                                <option value="women" <%=banner.forGender==='women'
+                                                                    ? 'selected' : '' %>>Women</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                                    <button type="button" class="btn btn-secondary me-md-2"
+                                                        onclick="history.back()">Cancel</button>
+                                                    <button type="submit" class="btn btn-primary">Update Banner</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Guidelines -->
+                                <div class="col-md-4">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h5 class="card-title">
+                                                <i class="bi bi-info-circle"></i> Banner Guidelines
+                                            </h5>
+                                            <ul class="list-unstyled mb-0">
+                                                <li class="mb-2">
+                                                    <i class="bi bi-check2 text-success"></i>
+                                                    Use high-quality, eye-catching images
+                                                </li>
+                                                <li class="mb-2">
+                                                    <i class="bi bi-check2 text-success"></i>
+                                                    Keep titles short and impactful
+                                                </li>
+                                                <li class="mb-2">
+                                                    <i class="bi bi-check2 text-success"></i>
+                                                    Use subtitles to add more context
+                                                </li>
+                                                <li class="mb-2">
+                                                    <i class="bi bi-check2 text-success"></i>
+                                                    Ensure the link goes to relevant products
+                                                </li>
+                                                <li class="mb-2">
+                                                    <i class="bi bi-check2 text-success"></i>
+                                                    Set position to control display order
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                </main>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Image preview functionality
-        document.getElementById('image').addEventListener('change', function(e) {
+        document.getElementById('image').addEventListener('change', function (e) {
             const preview = document.getElementById('imagePreview');
-            
+
             if (this.files && this.files[0]) {
                 const reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = function (e) {
                     preview.src = e.target.result;
                     preview.style.display = 'block';
                 }
@@ -173,4 +218,5 @@
         });
     </script>
 </body>
+
 </html>

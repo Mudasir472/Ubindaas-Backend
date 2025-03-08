@@ -1,3 +1,4 @@
+const { log } = require('console');
 const Banner = require('../../models/Banner');
 const fs = require('fs').promises;
 const path = require('path');
@@ -16,7 +17,7 @@ const deleteBannerImage = async (filename) => {
 exports.listBanners = async (req, res) => {
     try {
         const banners = await Banner.find().sort({ position: 1 });
-        
+
         res.render('admin/banners/list', {
             banners,
             title: 'Manage Banners',
@@ -40,16 +41,20 @@ exports.createBannerForm = async (req, res) => {
 
 exports.createBanner = async (req, res) => {
     try {
-        const { title, subtitle, link, buttonText, position, status, forGender } = req.body;
-        
+        const { title, subtitle, link, buttonText, position, status, forGender, bannerFor } = req.body;
         // Handle image
         if (!req.file) {
             req.flash('error_msg', 'Banner image is required');
             return res.redirect('/admin/banners/create');
         }
-        
+
         const image = req.file.filename;
-        
+        if (status === "active" && bannerFor === "offer") {
+            await Banner.updateMany(
+                { bannerFor: "offer", status: "active" },
+                { $set: { status: "inactive" } }
+            );
+        }
         // Create banner
         await Banner.create({
             title,
@@ -59,19 +64,20 @@ exports.createBanner = async (req, res) => {
             buttonText: buttonText || 'Shop Now',
             position: parseInt(position) || 0,
             status,
+            bannerFor,
             forGender
         });
-        
+
         req.flash('success_msg', 'Banner created successfully');
         res.redirect('/admin/banners');
     } catch (error) {
         console.error('Error in createBanner:', error);
-        
+
         // Clean up uploaded file if there was an error
         if (req.file) {
             await deleteBannerImage(req.file.filename);
         }
-        
+
         req.flash('error_msg', 'Error creating banner: ' + error.message);
         res.redirect('/admin/banners/create');
     }
@@ -80,12 +86,12 @@ exports.createBanner = async (req, res) => {
 exports.editBannerForm = async (req, res) => {
     try {
         const banner = await Banner.findById(req.params.id);
-        
+
         if (!banner) {
             req.flash('error_msg', 'Banner not found');
             return res.redirect('/admin/banners');
         }
-        
+
         res.render('admin/banners/edit', {
             banner,
             title: 'Edit Banner',
@@ -101,24 +107,30 @@ exports.editBannerForm = async (req, res) => {
 
 exports.updateBanner = async (req, res) => {
     try {
-        const { title, subtitle, link, buttonText, position, status, forGender } = req.body;
-        
+        const { title, subtitle, link, buttonText, position, status, forGender, bannerFor } = req.body;
+
         const banner = await Banner.findById(req.params.id);
-        
+
         if (!banner) {
             req.flash('error_msg', 'Banner not found');
             return res.redirect('/admin/banners');
         }
-        
+
         // Handle image
         let image = banner.image;
-        
+
         if (req.file) {
             // Delete old image
             await deleteBannerImage(banner.image);
             image = req.file.filename;
         }
-        
+        if (status === "active" && bannerFor === "offer") {
+            await Banner.updateMany(
+                { bannerFor: "offer", status: "active" },
+                { $set: { status: "inactive" } }
+            );
+        }
+
         // Update banner
         await Banner.findByIdAndUpdate(req.params.id, {
             title,
@@ -128,9 +140,10 @@ exports.updateBanner = async (req, res) => {
             buttonText: buttonText || 'Shop Now',
             position: parseInt(position) || 0,
             status,
-            forGender
+            forGender,
+            bannerFor
         });
-        
+
         req.flash('success_msg', 'Banner updated successfully');
         res.redirect('/admin/banners');
     } catch (error) {
@@ -143,17 +156,17 @@ exports.updateBanner = async (req, res) => {
 exports.deleteBanner = async (req, res) => {
     try {
         const banner = await Banner.findById(req.params.id);
-        
+
         if (!banner) {
             return res.status(404).json({ success: false, message: 'Banner not found' });
         }
-        
+
         // Delete image
         await deleteBannerImage(banner.image);
-        
+
         // Delete banner
         await Banner.findByIdAndDelete(req.params.id);
-        
+
         return res.json({ success: true, message: 'Banner deleted successfully' });
     } catch (error) {
         console.error('Error in deleteBanner:', error);
@@ -165,13 +178,13 @@ exports.deleteBanner = async (req, res) => {
 exports.getActiveBanners = async (req, res) => {
     try {
         const gender = req.query.gender || 'all';
-        
+
         // Get banners that are active and either for all genders or the specified gender
         const banners = await Banner.find({
             status: 'active',
             $or: [{ forGender: 'all' }, { forGender: gender }]
         }).sort({ position: 1 }).limit(5); // Limit to 5 banners for carousel
-        
+
         res.json({
             success: true,
             data: banners

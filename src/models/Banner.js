@@ -26,6 +26,11 @@ const BannerSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    bannerFor: {
+        type: String,
+        enum: ['carousal', 'offer'],
+        default: 'carousal'
+    },
     status: {
         type: String,
         enum: ['active', 'inactive'],

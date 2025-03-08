@@ -9,7 +9,8 @@ const mongoose = require('mongoose');
  */
 exports.addRating = async (req, res) => {
     try {
-        const { productId, rating, review } = req.body;
+        const productId = req.params;
+        const { rating, review } = req.body;
         const userId = req.user._id;
 
         // Validate product exists
@@ -322,8 +323,8 @@ exports.getRatings = async (req, res) => {
     try {
         const allRatings = await Rating.find({});
         res.status(200).json({
-            success:true,
-            ratings:allRatings
+            success: true,
+            ratings: allRatings
         });
     } catch (error) {
         console.log(error);
@@ -331,7 +332,6 @@ exports.getRatings = async (req, res) => {
             success: false,
             error: error.message
         })
-
     }
 }
 

@@ -13,10 +13,9 @@ const authenticate = async (req, res, next) => {
         const token = authHeader.split(' ')[1].replace(/['"]+/g, '');
 
         const verifyToken = jwt.verify(token, key);
-        
+
         const user = await User.findById(verifyToken.id);
-        console.log(user);
-        
+
         if (!user) {
             return res.status(401).json({ error: 'User not found' });
         }
@@ -24,8 +23,7 @@ const authenticate = async (req, res, next) => {
         req.user = user;
         next();
     } catch (error) {
-        console.log(error);
-        
+
         if (error.name === 'TokenExpiredError') {
             return res.status(401).json({ error: 'Token expired,Please Login First' });
         }
