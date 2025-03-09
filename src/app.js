@@ -34,22 +34,35 @@ const bannerApiRoutes = require('./routes/api/bannerRoutes');
 const ratingApiRoutes = require('./routes/api/ratingRoutes'); // New rating API routes
 const customerApiRoutes = require('./routes/api/customersRoutes')
 
+// Define CORS options
+const corsOptions = {
+    origin: ["http://localhost:3000"],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    exposedHeaders: ['Content-Type', 'Content-Length']
+};
+
+// Apply CORS middleware globally
+app.use(cors(corsOptions));
+
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-// app.use(cors());
-app.use(cors({
-    origin: ["http://localhost:3000"], // React frontend URL
-    credentials: true,
-}));
+
+// Serve static files - ORDER MATTERS HERE
+// Serve uploads directory with specific CORS settings
+app.use('/uploads', cors(corsOptions), express.static(path.join(__dirname, 'public/uploads')));
+
+// Other static files
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Security middleware
 app.use(helmet({
     contentSecurityPolicy: false,
 }));
 app.use(morgan('dev'));
 app.use(methodOverride('_method'));
-
-// Static files
-app.use(express.static(path.join(__dirname, 'public')));
 
 // EJS Setup
 app.set('view engine', 'ejs');
@@ -102,6 +115,15 @@ app.use('/api/customer', customerApiRoutes);
 // Base route
 app.get('/', (req, res) => {
     res.redirect('/admin/login');
+});
+
+// Debug route to test static file access
+app.get('/test-static', (req, res) => {
+    res.json({
+        message: 'Static file test route',
+        uploadPath: path.join(__dirname, 'public/uploads'),
+        exists: require('fs').existsSync(path.join(__dirname, 'public/uploads'))
+    });
 });
 
 // Error Handling Middleware
