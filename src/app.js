@@ -21,6 +21,7 @@ const adminCustomerRoutes = require('./routes/admin/adminCustomerRoutes');
 const adminSettingRoutes = require('./routes/admin/adminSettingRoutes');
 const adminBannerRoutes = require('./routes/admin/adminBannerRoutes');
 const adminRatingRoutes = require('./routes/admin/adminRatingRoutes'); // New rating routes
+const adminCollectionRoutes = require('./routes/admin/adminCollectionRoutes');
 
 // Import API routes
 const apiAuthRoutes = require('./routes/api/authRoutes');
@@ -33,6 +34,7 @@ const apiSettingRoutes = require('./routes/api/settingRoutes');
 const bannerApiRoutes = require('./routes/api/bannerRoutes');
 const ratingApiRoutes = require('./routes/api/ratingRoutes'); // New rating API routes
 const customerApiRoutes = require('./routes/api/customersRoutes')
+
 
 // Define CORS options
 const corsOptions = {
@@ -98,7 +100,8 @@ app.use('/admin/orders', adminOrderRoutes);
 app.use('/admin/customers', adminCustomerRoutes);
 app.use('/admin/settings', adminSettingRoutes);
 app.use('/admin/banners', adminBannerRoutes);
-app.use('/admin/ratings', adminRatingRoutes); // Added admin rating routes
+app.use('/admin/ratings', adminRatingRoutes);
+app.use('/admin/collections', adminCollectionRoutes);
 
 // API Routes
 app.use('/api/auth', apiAuthRoutes);

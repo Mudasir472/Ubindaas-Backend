@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <!-- Background circle -->
+  <circle cx="200" cy="200" r="200" fill="#f8f9fa"/>
+  
+  <!-- Model silhouette -->
+  <path d="M200,70 C230,70 255,95 255,125 C255,155 230,180 200,180 C170,180 145,155 145,125 C145,95 170,70 200,70 Z" fill="#dee2e6"/>
+  <path d="M200,190 C250,190 290,210 310,240 C330,270 335,310 335,345 L65,345 C65,310 70,270 90,240 C110,210 150,190 200,190 Z" fill="#dee2e6"/>
+  
+  <!-- Decorative elements -->
+  <circle cx="160" cy="125" r="5" fill="#adb5bd"/>
+  <circle cx="240" cy="125" r="5" fill="#adb5bd"/>
+  <path d="M175,150 C185,160 215,160 225,150" stroke="#adb5bd" stroke-width="3" fill="none"/>
+  
+  <!-- Text -->
+  <text x="200" y="380" font-family="Arial, sans-serif" font-size="20" text-anchor="middle" fill="#6c757d">Model Image</text>
+</svg>
