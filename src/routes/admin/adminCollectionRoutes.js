@@ -3,32 +3,54 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 const collectionController = require('../../controllers/admin/adminCollectionController');
 
-// Set up multer for handling file uploads
+// Create banners directory if it doesn't exist
+const collectionUploadDir = path.join(__dirname, '../../public/uploads/collections');
+if (!fs.existsSync(collectionUploadDir)) {
+  fs.mkdirSync(collectionUploadDir, { recursive: true });
+}
+// // Set up multer for handling file uploads
+// const storage = multer.diskStorage({
+//   destination: (req, file, cb) => {
+//     cb(null, 'public/uploads/collections');
+//   },
+//   filename: (req, file, cb) => {
+//     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+//     const ext = path.extname(file.originalname);
+//     cb(null, `collection-${uniqueSuffix}${ext}`);
+//   }
+// });
+
+// Configure storage for banner images
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'public/uploads/collections');
+  destination: function (req, file, cb) {
+    cb(null, collectionUploadDir);
   },
-  filename: (req, file, cb) => {
+  filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const ext = path.extname(file.originalname);
-    cb(null, `collection-${uniqueSuffix}${ext}`);
+    cb(null, 'banner-' + uniqueSuffix + path.extname(file.originalname));
   }
 });
 
+// File filter
 const fileFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith('image/')) {
-    cb(null, true);
-  } else {
-    cb(new Error('Only image files are allowed!'), false);
+  // Accept images only
+  if (!file.originalname.match(/\.(jpg|JPG|jpeg|JPEG|png|PNG|webp|WEBP)$/)) {
+    req.fileValidationError = 'Only image files are allowed!';
+    return cb(new Error('Only image files are allowed!'), false);
   }
+  cb(null, true);
 };
 
+// Initialize upload middleware
 const upload = multer({
-  storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
-  fileFilter
+  storage: storage,
+  fileFilter: fileFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB max size
+  }
 });
 
 // Routes

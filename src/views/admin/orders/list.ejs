@@ -56,8 +56,8 @@
                                     <tr>
                                         <td><%= order.orderId %></td>
                                         <td>
-                                            <%= order.customer.name %><br>
-                                            <small class="text-muted"><%= order.customer.email %></small>
+                                            <%= order.customer?.name %><br>
+                                            <small class="text-muted"><%= order.customer?.email %></small>
                                         </td>
                                         <td>₹<%= order.totalAmount.toFixed(2) %></td>
                                         <td>

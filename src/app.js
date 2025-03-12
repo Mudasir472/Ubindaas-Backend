@@ -34,6 +34,7 @@ const apiSettingRoutes = require('./routes/api/settingRoutes');
 const bannerApiRoutes = require('./routes/api/bannerRoutes');
 const ratingApiRoutes = require('./routes/api/ratingRoutes'); // New rating API routes
 const customerApiRoutes = require('./routes/api/customersRoutes')
+const collectionsApiRoutes = require('./routes/api/collectionRoutes')
 
 
 // Define CORS options
@@ -114,6 +115,8 @@ app.use('/api/settings', apiSettingRoutes);
 app.use('/api/banners', bannerApiRoutes);
 app.use('/api/ratings', ratingApiRoutes); // Added API rating routes
 app.use('/api/customer', customerApiRoutes);
+app.use('/api/collection', collectionsApiRoutes);
+
 
 // Base route
 app.get('/', (req, res) => {

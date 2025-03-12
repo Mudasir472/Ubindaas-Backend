@@ -1,29 +1,54 @@
 const Order = require('../../models/Order');
 const Product = require('../../models/Product');
-
+const mongoose = require('mongoose');
+const sendEmail = require('../../services/emailService');
 exports.createOrder = async (req, res) => {
     try {
         const {
-            items,
+
             shippingAddress,
             paymentMethod,
             totalAmount
         } = req.body;
+        // console.log(items);
+        console.log(req.body);
+        const items = req.body.items
+            .map(item => {
+                if (!mongoose.Types.ObjectId.isValid(item.product)) {
+                    console.error("Invalid product ID:", item.product);
+                    return {
+                        product: null,
+                        quantity: item.quantity,
+                        price: item.price,
+                        size: item?.size || null,
+                        color: item?.color || null
+                    }
+                }
+
+                return {
+                    product: new mongoose.Types.ObjectId(item.product), // Convert to ObjectId
+                    quantity: item.quantity,
+                    price: item.price,
+                    size: item?.size || null,
+                    color: item?.color || null
+                };
+            })
+            .filter(item => item !== null);
 
         // Validate stock
-        for (const item of items) {
-            const product = await Product.findById(item.product);
-            if (!product || product.stock < item.quantity) {
-                return res.status(400).json({
-                    success: false,
-                    message: `${product.name} is out of stock`
-                });
-            }
-        }
+        // for (const item of items) {
+        //     const product = await Product.findById(item.product);
+        //     if (!product || product.stock < item.quantity) {
+        //         return res.status(400).json({
+        //             success: false,
+        //             message: `${product.name} is out of stock`
+        //         });
+        //     }
+        // }
 
         // Create order
         const order = await Order.create({
-            customer: req.customer._id,
+            customer: req.user._id,
             items,
             shippingAddress,
             paymentMethod,
@@ -32,11 +57,30 @@ exports.createOrder = async (req, res) => {
             paymentStatus: 'pending'
         });
 
+
         // Update product stock
-        for (const item of items) {
-            await Product.findByIdAndUpdate(item.product, {
-                $inc: { stock: -item.quantity }
-            });
+        // for (const item of items) {
+        //     await Product.findByIdAndUpdate(item.product, {
+        //         $inc: { stock: -item.quantity }
+        //     });
+        // }
+
+        const customer = await User.findById(req.user._id);
+        if (customer) {
+            const emailContent = `
+        <html>
+          <body style="font-family: Arial, sans-serif; color: #333;">
+            <h2 style="color: #4CAF50;">Order Confirmation</h2>
+            <p>Dear <strong>${customer.name}</strong>,</p>
+            <p>Your order has been confirmed!</p>
+            <p><strong>Order ID:</strong> ${order._id}</p>
+            <p><strong>Total Amount:</strong> ₹${totalAmount}</p>
+            <p>Thank you for shopping with us!</p>
+          </body>
+        </html>
+      `;
+
+            await sendEmail(customer.email, "Order Confirmation", emailContent);  //sending update
         }
 
         res.json({
@@ -53,7 +97,9 @@ exports.createOrder = async (req, res) => {
 };
 exports.getUserOrders = async (req, res) => {
     try {
-        const allOrders = await Order.find({});
+        const allOrders = await Order.find({}).populate('customer');
+        console.log(allOrders);
+
         if (!allOrders) {
             return res.status(400).json({
                 success: false,

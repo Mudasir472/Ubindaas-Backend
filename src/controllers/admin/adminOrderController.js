@@ -1,6 +1,6 @@
 const Order = require('../../models/Order');
 const Product = require('../../models/Product');
-
+const sendEmail = require('../../services/emailService.js')
 // List all orders
 exports.listOrders = async (req, res) => {
     try {
@@ -15,6 +15,7 @@ exports.listOrders = async (req, res) => {
 
         const orders = await Order.find(query)
             .populate('items.product')
+            .populate('customer')
             .sort({ createdAt: -1 })
             .skip((page - 1) * limit)
             .limit(limit);
@@ -39,7 +40,8 @@ exports.listOrders = async (req, res) => {
 exports.viewOrder = async (req, res) => {
     try {
         const order = await Order.findById(req.params.id)
-            .populate('items.product');
+            .populate('items.product')
+            .populate('customer')
 
         if (!order) {
             req.flash('error_msg', 'Order not found');
@@ -64,9 +66,9 @@ exports.updateOrderStatus = async (req, res) => {
         const order = await Order.findById(req.params.id);
 
         if (!order) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Order not found' 
+            return res.status(404).json({
+                success: false,
+                message: 'Order not found'
             });
         }
 
@@ -74,15 +76,29 @@ exports.updateOrderStatus = async (req, res) => {
         if (notes) order.notes = notes;
         await order.save();
 
-        return res.json({ 
-            success: true, 
-            message: 'Order status updated successfully' 
+        // let emailMessage = `Dear ${order.customer.name},\n\nYour order is now ${status}.\n\nThank you for shopping with us!`;
+        const emailContent = `
+      <html>
+        <body style="font-family: Arial, sans-serif; color: #333;">
+          <h2 style="color: #3498db;">Order Status Update</h2>
+          <p>Dear <strong>${order.customer.name}</strong>,</p>
+          <p>Your order status has been updated to: <strong style="color: #f39c12;">${status}</strong></p>
+          <p><strong>Order ID:</strong> ${order._id}</p>
+          <p>Thank you for choosing us!</p>
+        </body>
+      </html>
+    `;
+        // Send email
+        await sendEmail(order.customer.email, `Order ${status}`, emailContent);
+        return res.json({
+            success: true,
+            message: 'Order status updated successfully'
         });
     } catch (error) {
         console.error('Error in updateOrderStatus:', error);
-        return res.status(500).json({ 
-            success: false, 
-            message: 'Error updating order status' 
+        return res.status(500).json({
+            success: false,
+            message: 'Error updating order status'
         });
     }
 };
@@ -94,9 +110,9 @@ exports.updateTracking = async (req, res) => {
         const order = await Order.findById(req.params.id);
 
         if (!order) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Order not found' 
+            return res.status(404).json({
+                success: false,
+                message: 'Order not found'
             });
         }
 
@@ -104,15 +120,15 @@ exports.updateTracking = async (req, res) => {
         order.status = 'shipped';
         await order.save();
 
-        return res.json({ 
-            success: true, 
-            message: 'Tracking information updated successfully' 
+        return res.json({
+            success: true,
+            message: 'Tracking information updated successfully'
         });
     } catch (error) {
         console.error('Error in updateTracking:', error);
-        return res.status(500).json({ 
-            success: false, 
-            message: 'Error updating tracking information' 
+        return res.status(500).json({
+            success: false,
+            message: 'Error updating tracking information'
         });
     }
 };

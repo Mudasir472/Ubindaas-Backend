@@ -1,29 +1,17 @@
 const mongoose = require('mongoose');
-
+const { v4: uuidv4 } = require('uuid');
 const orderSchema = new mongoose.Schema({
     orderId: {
         type: String,
-        unique: true
+        unique: true,// Generate unique order ID
     },
-    customer: {
-        name: {
-            type: String,
-            required: true
-        },
-        email: {
-            type: String,
-            required: true
-        },
-        phone: {
-            type: String,
-            required: true
-        }
-    },
+
+
     items: [{
         product: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Product',
-            required: true
+            // required: true
         },
         quantity: {
             type: Number,
@@ -71,13 +59,17 @@ const orderSchema = new mongoose.Schema({
         trackingId: String,
         url: String
     },
+    customer: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
     notes: String
 }, {
     timestamps: true
 });
 
 // Generate order ID before saving
-orderSchema.pre('save', async function(next) {
+orderSchema.pre('save', async function (next) {
     if (!this.orderId) {
         const count = await mongoose.model('Order').countDocuments();
         this.orderId = 'OD' + Date.now().toString().slice(-8) + (count + 1).toString().padStart(4, '0');
