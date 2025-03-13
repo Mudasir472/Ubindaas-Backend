@@ -2,6 +2,7 @@ const Order = require('../../models/Order');
 const Product = require('../../models/Product');
 const mongoose = require('mongoose');
 const sendEmail = require('../../services/emailService');
+const User = require('../../models/User');
 exports.createOrder = async (req, res) => {
     try {
         const {
@@ -97,7 +98,9 @@ exports.createOrder = async (req, res) => {
 };
 exports.getUserOrders = async (req, res) => {
     try {
-        const allOrders = await Order.find({}).populate('customer');
+        const allOrders = await Order.find({})
+            .populate('customer')
+            .populate('items.product');
         console.log(allOrders);
 
         if (!allOrders) {
