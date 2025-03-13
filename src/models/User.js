@@ -24,6 +24,16 @@ const userSchema = new mongoose.Schema({
         enum: ['admin', 'manager'],
         default: 'admin'
     },
+    image: {
+        imgName: String,
+        url: {
+            default: "https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp",
+            type: String,
+        },
+        public_id: {
+            type: String
+        }
+    },
     status: {
         type: String,
         enum: ['active', 'inactive'],
@@ -32,7 +42,7 @@ const userSchema = new mongoose.Schema({
     phone: {
         type: String,
         minlength: 10,
-        required:true
+        required: true
     },
     addresses: [{
         type: {

@@ -99,9 +99,15 @@ exports.createOrder = async (req, res) => {
 exports.getUserOrders = async (req, res) => {
     try {
         const allOrders = await Order.find({})
-            .populate('customer')
-            .populate('items.product');
-        console.log(allOrders);
+            .populate({
+                path: 'items',
+
+            })
+            .populate({
+                path: 'items.product', 
+                model: 'Product' 
+            })
+            .populate('customer');
 
         if (!allOrders) {
             return res.status(400).json({

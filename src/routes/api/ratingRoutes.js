@@ -4,7 +4,7 @@ const ratingController = require('../../controllers/api/ratingController');
 const { protect } = require('../../middlewares/authMiddleware');
 const authenticate = require('../../middlewares/authenticate')
 // Public routes
-router.get('/getAllRatings', authenticate, ratingController.getRatings)
+router.get('/getAllRatings', ratingController.getRatings)
 router.get('/product/:productId', ratingController.getProductRatings);
 router.get('/average/:productId', ratingController.getAverageRating);
 

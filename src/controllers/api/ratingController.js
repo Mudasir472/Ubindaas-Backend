@@ -7,43 +7,39 @@ const mongoose = require('mongoose');
  * @route POST /api/ratings
  * @access Private
  */
+
 exports.addRating = async (req, res) => {
     try {
-        const productId = req.params;
+        const productId = req.params.productId;
         const { rating, review } = req.body;
         const userId = req.user._id;
 
-        // Validate product exists
+        if (!mongoose.Types.ObjectId.isValid(productId)) {
+            return res.status(400).json({ success: false, message: "Invalid product ID" });
+        }
+
         const product = await Product.findById(productId);
         if (!product) {
-            return res.status(404).json({
-                success: false,
-                message: 'Product not found'
-            });
+            return res.status(404).json({ success: false, message: "Product not found" });
         }
 
-        // Validate rating value
         if (rating < 1 || rating > 5) {
-            return res.status(400).json({
-                success: false,
-                message: 'Rating must be between 1 and 5'
-            });
+            return res.status(400).json({ success: false, message: "Rating must be between 1 and 5" });
         }
 
-        // Check if user has already rated this product
         const existingRating = await Rating.findOne({ productId, userId });
 
         if (existingRating) {
             // Update existing rating
             existingRating.rating = rating;
             existingRating.review = review;
-            existingRating.status = 'pending'; // Reset to pending when updated
+            existingRating.status = 'pending'; // Reset status if needed
             await existingRating.save();
 
-            res.json({
+            return res.status(200).json({
                 success: true,
                 data: existingRating,
-                message: 'Your rating has been updated and is pending approval'
+                message: "Your rating has been updated and is pending approval",
             });
         } else {
             // Create new rating
@@ -52,36 +48,36 @@ exports.addRating = async (req, res) => {
                 userId,
                 rating,
                 review,
-                status: 'pending'
+                status: "pending",
             });
 
             res.status(201).json({
                 success: true,
                 data: newRating,
-                message: 'Your rating has been submitted and is pending approval'
+                message: "Your rating has been submitted and is pending approval",
             });
         }
 
         // Update product average rating in the background
         updateProductAverageRating(productId);
-
     } catch (error) {
-        console.error('Error in addRating:', error);
+        console.error("Error in addRating:", error);
 
         // Handle duplicate key error
         if (error.code === 11000) {
             return res.status(400).json({
                 success: false,
-                message: 'You have already rated this product'
+                message: "You have already rated this product",
             });
         }
 
         res.status(500).json({
             success: false,
-            message: 'Error adding rating'
+            message: "Error adding rating",
         });
     }
 };
+
 
 /**
  * Get approved ratings for a product
@@ -91,6 +87,7 @@ exports.addRating = async (req, res) => {
 exports.getProductRatings = async (req, res) => {
     try {
         const { productId } = req.params;
+        console.log(req.params);
 
         // Validate that productId is a valid ObjectId
         if (!mongoose.Types.ObjectId.isValid(productId)) {
@@ -106,6 +103,7 @@ exports.getProductRatings = async (req, res) => {
         })
             .populate('userId', 'name avatar') // Get user info without sensitive data
             .sort({ createdAt: -1 });
+        console.log(ratings);
 
         res.json({
             success: true,
@@ -138,7 +136,7 @@ exports.getAverageRating = async (req, res) => {
         }
 
         const result = await Rating.aggregate([
-            { $match: { productId: mongoose.Types.ObjectId(productId), status: 'approved' } },
+            { $match: { productId: new mongoose.Types.ObjectId(productId), status: 'approved' } },
             {
                 $group: {
                     _id: null,
@@ -321,7 +319,8 @@ exports.updateRatingStatus = async (req, res) => {
 
 exports.getRatings = async (req, res) => {
     try {
-        const allRatings = await Rating.find({});
+        const allRatings = await Rating.find({}).populate('userId');
+
         res.status(200).json({
             success: true,
             ratings: allRatings
@@ -341,7 +340,7 @@ exports.getRatings = async (req, res) => {
 async function updateProductAverageRating(productId) {
     try {
         const result = await Rating.aggregate([
-            { $match: { productId: mongoose.Types.ObjectId(productId), status: 'approved' } },
+            { $match: { productId: new mongoose.Types.ObjectId(productId), status: 'approved' } },
             {
                 $group: {
                     _id: null,
