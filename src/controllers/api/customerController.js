@@ -263,19 +263,33 @@ exports.getOrderDetails = async (req, res) => {
 // getWishlist
 exports.getWishlist = async (req, res) => {
     try {
+        const user = await User.findById(req.user._id).populate('wishlist');
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found",
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            wishlist: user.wishlist, 
+        });
 
     } catch (error) {
         return res.status(500).json({
             success: false,
             error: error.message
-        })
+        });
     }
-}
+};
+
 
 exports.addToWishlist = async (req, res) => {
     try {
-
-        const { productId, userId } = req.body;
+        const userId = req.user._id;
+        const { productId } = req.body;
 
         if (!productId) {
             return res.status(400).json({ success: false, message: "Product ID is required" });
@@ -298,7 +312,8 @@ exports.addToWishlist = async (req, res) => {
         }
 
         user.wishlist.push(productId);
-        await user.save();
+        await user.save({ validateBeforeSave: false });
+
 
         res.status(200).json({ success: true, message: "Product added to wishlist" });
     } catch (error) {

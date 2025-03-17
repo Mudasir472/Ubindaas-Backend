@@ -22,7 +22,7 @@ router.get('/orders/:id', protect, customerController.getOrderDetails);
 
 // Wishlist
 router.get('/wishlist', authenticate, customerController.getWishlist);
-router.post('/wishlist',  customerController.addToWishlist);
+router.post('/wishlist', authenticate, customerController.addToWishlist);
 // router.delete('/wishlist/:productId', protect, customerController.removeFromWishlist);
 
 // // Review management

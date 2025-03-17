@@ -44,6 +44,11 @@ const userSchema = new mongoose.Schema({
         minlength: 10,
         required: true
     },
+    wishlist: {
+        type: [mongoose.Schema.Types.ObjectId],  
+        ref: 'Product', 
+        default: [], 
+    },
     addresses: [{
         type: {
             type: String,
