@@ -1,0 +1,162 @@
+<!-- views/admin/Story/edit.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Story</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            /* padding: 20px; */
+        }
+
+        .form-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .row {
+            margin-right: 0 !important;
+            margin-left: 0 !important;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .form-hint {
+            font-size: 0.875rem;
+            color: #6c757d;
+        }
+
+        .form-label.required::after {
+            content: "*";
+            color: #dc3545;
+            margin-left: 4px;
+        }
+
+        .back-button {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .save-button {
+            background-color: #0d6efd;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="fluid row">
+        <%- include('../partials/sidebar') %>
+            <div class="form-container">
+                <div class="page-header">
+                    <h1>Edit Story</h1>
+                    <a href="/admin/stories" class="btn back-button">← Back to Stories</a>
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <form action="/admin/stories/update/<%= story._id %>" method="POST"
+                            enctype="multipart/form-data">
+                            <div class="row">
+                                <div class="col-md-6">
+
+
+
+
+                                    <div class="mb-3">
+                                        <label class="form-label">Status</label>
+                                        <div>
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" name="isActive"
+                                                    id="statusActive" value="true" <%=story.isActive ? 'checked' : ''
+                                                    %>>
+                                                <label class="form-check-label" for="statusActive">Active</label>
+                                            </div>
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" name="isActive"
+                                                    id="statusInactive" value="false" <%=!story.isActive ? 'checked'
+                                                    : '' %>>
+                                                <label class="form-check-label" for="statusInactive">Inactive</label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="image" class="form-label">Story Image</label>
+                                        <input type="file" class="form-control" id="image" name="image"
+                                            accept="image/*">
+
+
+                                        <% if(story.image) { %>
+                                            <div class="mt-2">
+                                                <p class="form-hint">Current image:</p>
+                                                <img src="/uploads/products/<%= story.image %>"
+                                                    alt="<%= story.status %>" class="img-thumbnail"
+                                                    style="height: 150px; width: 150px; object-fit: cover; border-radius: 50%;">
+                                            </div>
+                                            <% } %>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="video">Story Video</label>
+                                        <input type="file" name="video" id="video" class="form-control"
+                                            accept="video/*">
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="products" class="form-label required">Select a Product</label>
+                                        <select class="form-select" id="products" name="products" size="8" required>
+                                            <% if(products && products.length> 0) { %>
+                                                <% products.forEach(function(product) { %>
+                                                    <option value="<%= product._id %>">
+                                                        <%= product.name %> - ₹<%= product.price %>
+                                                                (<%= product.gender %>
+                                                                    <%= product.category ? ', ' + product.category : ''
+                                                                        %>)
+                                                    </option>
+                                                    <% }); %>
+                                                        <% } else { %>
+                                                            <option disabled>No products available</option>
+                                                            <% } %>
+                                        </select>
+
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-end mt-4">
+                                <a href="/admin/stories" class="btn btn-secondary me-2">Cancel</a>
+                                <button type="submit" class="btn save-button">Update Story</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Preview image before upload
+        document.getElementById('modelImage').addEventListener('change', function (e) {
+            const file = this.files[0];
+            if (file) {
+                // Preview functionality could be added here if desired
+                console.log('File selected:', file.name);
+            }
+        });
+    </script>
+</body>
+
+</html>

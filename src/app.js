@@ -20,8 +20,10 @@ const adminOrderRoutes = require('./routes/admin/adminOrderRoutes');
 const adminCustomerRoutes = require('./routes/admin/adminCustomerRoutes');
 const adminSettingRoutes = require('./routes/admin/adminSettingRoutes');
 const adminBannerRoutes = require('./routes/admin/adminBannerRoutes');
+const adminOfferBannerRoutes = require('./routes/admin/adminOfferBannerRoutes');
 const adminRatingRoutes = require('./routes/admin/adminRatingRoutes'); // New rating routes
 const adminCollectionRoutes = require('./routes/admin/adminCollectionRoutes');
+const adminStoryRoutes = require('./routes/admin/adminStoryRoute');
 
 // Import API routes
 const apiAuthRoutes = require('./routes/api/authRoutes');
@@ -32,9 +34,11 @@ const apiPaymentRoutes = require('./routes/api/paymentRoutes');
 const apiProductRoutes = require('./routes/api/productRoutes');
 const apiSettingRoutes = require('./routes/api/settingRoutes');
 const bannerApiRoutes = require('./routes/api/bannerRoutes');
+const offerBannerApiRoutes = require('./routes/api/offerBannerRoute');
 const ratingApiRoutes = require('./routes/api/ratingRoutes'); // New rating API routes
 const customerApiRoutes = require('./routes/api/customersRoutes')
 const collectionsApiRoutes = require('./routes/api/collectionRoutes')
+const storyRoutes = require('./routes/api/storyRoutes')
 
 
 // Define CORS options
@@ -101,8 +105,10 @@ app.use('/admin/orders', adminOrderRoutes);
 app.use('/admin/customers', adminCustomerRoutes);
 app.use('/admin/settings', adminSettingRoutes);
 app.use('/admin/banners', adminBannerRoutes);
+app.use('/admin/offerbanners', adminOfferBannerRoutes);
 app.use('/admin/ratings', adminRatingRoutes);
 app.use('/admin/collections', adminCollectionRoutes);
+app.use('/admin/stories', adminStoryRoutes);
 
 // API Routes
 app.use('/api/auth', apiAuthRoutes);
@@ -113,9 +119,12 @@ app.use('/api/payments', apiPaymentRoutes);
 app.use('/api/products', apiProductRoutes);
 app.use('/api/settings', apiSettingRoutes);
 app.use('/api/banners', bannerApiRoutes);
+app.use('/api/offerBanners', offerBannerApiRoutes);
 app.use('/api/ratings', ratingApiRoutes); // Added API rating routes
 app.use('/api/customer', customerApiRoutes);
 app.use('/api/collection', collectionsApiRoutes);
+app.use('/api/stories', storyRoutes);
+
 
 
 // Base route

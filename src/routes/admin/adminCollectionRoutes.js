@@ -11,17 +11,6 @@ const collectionUploadDir = path.join(__dirname, '../../public/uploads/collectio
 if (!fs.existsSync(collectionUploadDir)) {
   fs.mkdirSync(collectionUploadDir, { recursive: true });
 }
-// // Set up multer for handling file uploads
-// const storage = multer.diskStorage({
-//   destination: (req, file, cb) => {
-//     cb(null, 'public/uploads/collections');
-//   },
-//   filename: (req, file, cb) => {
-//     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-//     const ext = path.extname(file.originalname);
-//     cb(null, `collection-${uniqueSuffix}${ext}`);
-//   }
-// });
 
 // Configure storage for banner images
 const storage = multer.diskStorage({

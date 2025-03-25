@@ -17,7 +17,7 @@ module.exports = {
         try {
             const { email, password } = req.body;
 
-            const ADMIN_EMAIL = 'admin@ubindass.com';
+            const ADMIN_EMAIL = 'admin@ubindass.in';
             const ADMIN_PASSWORD = 'admin123';
 
             if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {

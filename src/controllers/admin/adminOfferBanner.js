@@ -1,12 +1,14 @@
 const { log } = require('console');
-const Banner = require('../../models/Banner');
+// const Banner = require('../../models/Banner');
 const fs = require('fs').promises;
 const path = require('path');
+
+const OfferBanner = require('../../models/OfferBanner')
 
 // Helper function to delete a banner image
 const deleteBannerImage = async (filename) => {
     try {
-        const imagePath = path.join(__dirname, '../../public/uploads/banners', filename);
+        const imagePath = path.join(__dirname, '../../public/uploads/offerbanners', filename);
         await fs.unlink(imagePath);
     } catch (error) {
         console.error('Error deleting banner image:', error);
@@ -14,12 +16,12 @@ const deleteBannerImage = async (filename) => {
 };
 
 // Admin controllers
-exports.listBanners = async (req, res) => {
+exports.listOfferBanners = async (req, res) => {
     try {
-        const banners = await Banner.find().sort({ position: 1 });
+        const offerBanners = await OfferBanner.find().sort({ position: 1 });
 
-        res.render('admin/banners/list', {
-            banners,
+        res.render('admin/offerBanners/list', {
+            offerBanners,
             title: 'Manage Banners',
             success_msg: req.flash('success_msg'),
             error_msg: req.flash('error_msg')
@@ -31,39 +33,48 @@ exports.listBanners = async (req, res) => {
     }
 };
 
-exports.createBannerForm = async (req, res) => {
-    res.render('admin/banners/create', {
+exports.createOfferBannerForm = async (req, res) => {
+    res.render('admin/offerBanners/create', {
         title: 'Create Banner',
         success_msg: req.flash('success_msg'),
         error_msg: req.flash('error_msg')
     });
 };
 
-exports.createBanner = async (req, res) => {
+exports.createOfferBanner = async (req, res) => {
     try {
-        const { title, subtitle, link, buttonText, position, status, forGender, bannerFor } = req.body;
+        const { title, link, status } = req.body;
+
         // Handle image
         if (!req.file) {
             req.flash('error_msg', 'Banner image is required');
-            return res.redirect('/admin/banners/create');
+            return res.redirect('/admin/offerBanners/create');
         }
 
         const image = req.file.filename;
-        
+        if (status === "active") {
+            // Get all active banners sorted by creation date (oldest first)
+            const activeBanners = await OfferBanner.find({ status: "active" })
+                .sort({ createdAt: 1 }); // Sort by creation date (oldest first)
+
+            // If we already have 2 active banners, deactivate the oldest one
+            if (activeBanners.length >= 2) {
+                await OfferBanner.updateOne(
+                    { _id: activeBanners[0]._id }, // The oldest banner
+                    { $set: { status: "inactive" } }
+                );
+            }
+        }
         // Create banner
-        await Banner.create({
+        await OfferBanner.create({
             title,
-            subtitle,
             image,
-            link,
-            buttonText: buttonText || 'Shop Now',
-            position: parseInt(position) || 0,
             status,
-            forGender
         });
 
+
         req.flash('success_msg', 'Banner created successfully');
-        res.redirect('/admin/banners');
+        res.redirect('/admin/offerBanners');
     } catch (error) {
         console.error('Error in createBanner:', error);
 
@@ -73,21 +84,21 @@ exports.createBanner = async (req, res) => {
         }
 
         req.flash('error_msg', 'Error creating banner: ' + error.message);
-        res.redirect('/admin/banners/create');
+        res.redirect('/admin/offerBanners/create');
     }
 };
 
-exports.editBannerForm = async (req, res) => {
+exports.editOfferBannerForm = async (req, res) => {
     try {
-        const banner = await Banner.findById(req.params.id);
+        const offerBanner = await OfferBanner.findById(req.params.id);
 
-        if (!banner) {
+        if (!offerBanner) {
             req.flash('error_msg', 'Banner not found');
-            return res.redirect('/admin/banners');
+            return res.redirect('/admin/offerBanners');
         }
 
-        res.render('admin/banners/edit', {
-            banner,
+        res.render('admin/offerBanners/edit', {
+            offerBanner,
             title: 'Edit Banner',
             success_msg: req.flash('success_msg'),
             error_msg: req.flash('error_msg')
@@ -95,19 +106,18 @@ exports.editBannerForm = async (req, res) => {
     } catch (error) {
         console.error('Error in editBannerForm:', error);
         req.flash('error_msg', 'Error loading banner');
-        res.redirect('/admin/banners');
+        res.redirect('/admin/offerBanners');
     }
 };
 
-exports.updateBanner = async (req, res) => {
+exports.updateOfferBanner = async (req, res) => {
     try {
-        const { title, subtitle, link, buttonText, position, status, forGender } = req.body;
-
-        const banner = await Banner.findById(req.params.id);
+        const { title, link, status, } = req.body;
+        const banner = await OfferBanner.findById(req.params.id);
 
         if (!banner) {
             req.flash('error_msg', 'Banner not found');
-            return res.redirect('/admin/banners');
+            return res.redirect('/admin/offerBanners');
         }
 
         // Handle image
@@ -119,37 +129,41 @@ exports.updateBanner = async (req, res) => {
             image = req.file.filename;
         }
         if (status === "active") {
-            await Banner.updateMany(
-                { bannerFor: "offer", status: "active" },
-                { $set: { status: "inactive" } }
-            );
+            // Get all active banners (excluding the current one we're updating)
+            const activeBanners = await OfferBanner.find({
+                status: "active",
+                _id: { $ne: req.params.id } // Exclude current banner
+            }).sort({ createdAt: 1 }); // Sort by creation date (oldest first)
+
+            // If we already have 2 active banners (excluding current one), deactivate the oldest
+            if (activeBanners.length >= 2) {
+                await OfferBanner.updateOne(
+                    { _id: activeBanners[0]._id }, // The oldest banner
+                    { $set: { status: "inactive" } }
+                );
+            }
         }
 
         // Update banner
-        await Banner.findByIdAndUpdate(req.params.id, {
+        await OfferBanner.findByIdAndUpdate(req.params.id, {
             title,
-            subtitle,
             image,
             link,
-            buttonText: buttonText || 'Shop Now',
-            position: parseInt(position) || 0,
             status,
-            forGender,
-            bannerFor
         });
 
         req.flash('success_msg', 'Banner updated successfully');
-        res.redirect('/admin/banners');
+        res.redirect('/admin/offerBanners');
     } catch (error) {
         console.error('Error in updateBanner:', error);
         req.flash('error_msg', 'Error updating banner: ' + error.message);
-        res.redirect(`/admin/banners/edit/${req.params.id}`);
+        res.redirect(`/admin/offerBanners/edit/${req.params.id}`);
     }
 };
 
-exports.deleteBanner = async (req, res) => {
+exports.deleteOfferBanner = async (req, res) => {
     try {
-        const banner = await Banner.findById(req.params.id);
+        const banner = await OfferBanner.findById(req.params.id);
 
         if (!banner) {
             return res.status(404).json({ success: false, message: 'Banner not found' });
@@ -159,7 +173,7 @@ exports.deleteBanner = async (req, res) => {
         await deleteBannerImage(banner.image);
 
         // Delete banner
-        await Banner.findByIdAndDelete(req.params.id);
+        await OfferBanner.findByIdAndDelete(req.params.id);
 
         return res.json({ success: true, message: 'Banner deleted successfully' });
     } catch (error) {
@@ -171,12 +185,10 @@ exports.deleteBanner = async (req, res) => {
 // API controllers for frontend
 exports.getActiveBanners = async (req, res) => {
     try {
-        const gender = req.query.gender || 'all';
 
         // Get banners that are active and either for all genders or the specified gender
-        const banners = await Banner.find({
+        const banners = await OfferBanner.find({
             status: 'active',
-            $or: [{ forGender: 'all' }, { forGender: gender }]
         }).sort({ position: 1 }).limit(5); // Limit to 5 banners for carousel
 
         res.json({
