@@ -183,7 +183,9 @@ exports.deleteCollection = async (req, res) => {
 
     // Delete model image file if exists
     if (collection.modelImageUrl) {
-      const imagePath = path.join(__dirname, '../..', 'public', collection.modelImageUrl);
+      const imagePath = path.join(__dirname, '../..', 'public/uploads/collections', collection.modelImageUrl);
+      console.log(imagePath);
+
       if (fs.existsSync(imagePath)) {
         fs.unlinkSync(imagePath);
       }

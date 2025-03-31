@@ -6,13 +6,11 @@ const User = require('../../models/User');
 exports.createOrder = async (req, res) => {
     try {
         const {
-
             shippingAddress,
             paymentMethod,
             totalAmount
         } = req.body;
         // console.log(items);
-        console.log(req.body);
         const items = req.body.items
             .map(item => {
                 if (!mongoose.Types.ObjectId.isValid(item.product)) {
@@ -37,15 +35,15 @@ exports.createOrder = async (req, res) => {
             .filter(item => item !== null);
 
         // Validate stock
-        // for (const item of items) {
-        //     const product = await Product.findById(item.product);
-        //     if (!product || product.stock < item.quantity) {
-        //         return res.status(400).json({
-        //             success: false,
-        //             message: `${product.name} is out of stock`
-        //         });
-        //     }
-        // }
+        for (const item of items) {
+            const product = await Product.findById(item.product);
+            if (!product || product.stock < item.quantity) {
+                return res.status(400).json({
+                    success: false,
+                    message: `${product.name} is out of stock`
+                });
+            }
+        }
 
         // Create order
         const order = await Order.create({
@@ -55,16 +53,18 @@ exports.createOrder = async (req, res) => {
             paymentMethod,
             totalAmount,
             status: 'pending',
-            paymentStatus: 'pending'
+            paymentStatus: paymentMethod === 'cod' ? 'pending' : 'paid'
         });
 
 
         // Update product stock
-        // for (const item of items) {
-        //     await Product.findByIdAndUpdate(item.product, {
-        //         $inc: { stock: -item.quantity }
-        //     });
-        // }
+        for (const item of items) {
+            await Product.findByIdAndUpdate(item.product, {
+                $inc: { stock: -item.quantity }
+            });
+        }
+        console.log(items);
+
 
         const customer = await User.findById(req.user._id);
         if (customer) {
@@ -104,8 +104,8 @@ exports.getUserOrders = async (req, res) => {
 
             })
             .populate({
-                path: 'items.product', 
-                model: 'Product' 
+                path: 'items.product',
+                model: 'Product'
             })
             .populate('customer');
 

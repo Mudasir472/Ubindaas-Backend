@@ -3,7 +3,8 @@ const { v4: uuidv4 } = require('uuid');
 const orderSchema = new mongoose.Schema({
     orderId: {
         type: String,
-        unique: true,// Generate unique order ID
+        unique: true,
+        default: uuidv4
     },
 
 
