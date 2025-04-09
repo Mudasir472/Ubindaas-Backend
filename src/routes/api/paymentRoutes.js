@@ -62,6 +62,8 @@ router.post("/create-order", authenticate, async (req, res) => {
         const order = await razorpay.orders.create(options);
         res.json(order);
     } catch (error) {
+        console.log("error",error);
+        
         res.status(500).json({ error: error.message });
     }
 });
@@ -131,7 +133,6 @@ router.post("/verify-payment", authenticate, async (req, res) => {
 router.post('/cod-verify', protect, async (req, res) => {
     try {
         const { orderId } = req.body;
-
         await Order.findByIdAndUpdate(orderId, {
             paymentStatus: 'pending',
             paymentMethod: 'cod',

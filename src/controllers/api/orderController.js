@@ -1,6 +1,7 @@
 const Order = require('../../models/Order');
 const Product = require('../../models/Product');
 const mongoose = require('mongoose');
+const axios = require('axios')
 const sendEmail = require('../../services/emailService');
 const User = require('../../models/User');
 exports.createOrder = async (req, res) => {
@@ -58,12 +59,11 @@ exports.createOrder = async (req, res) => {
 
 
         // Update product stock
-        for (const item of items) {
-            await Product.findByIdAndUpdate(item.product, {
-                $inc: { stock: -item.quantity }
-            });
-        }
-        console.log(items);
+        // for (const item of items) {
+        //     await Product.findByIdAndUpdate(item.product, {
+        //         $inc: { stock: -item.quantity }
+        //     });
+        // }
 
 
         const customer = await User.findById(req.user._id);
@@ -81,13 +81,33 @@ exports.createOrder = async (req, res) => {
         </html>
       `;
 
+
             await sendEmail(customer.email, "Order Confirmation", emailContent);  //sending update
         }
 
+        // 🚚 Trigger Delhivery shipment
+        console.log(`Sending shipping request for order: ${order._id}`);
+
+        try {
+            const shippingResponse = await axios.post(
+                `${process.env.API_BASE_URL}/api/shipping/generate-shipment/${order._id}`,
+                { orderId: order._id.toString() },
+                {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                }
+            );
+            console.log("Shipping response:", shippingResponse.data);
+        } catch (shippingError) {
+            console.error('Shipping Error:', shippingError?.response?.data || shippingError.message);
+            
+        }
         res.json({
             success: true,
             data: order
         });
+
     } catch (error) {
         console.error('Error in createOrder:', error);
         res.status(500).json({

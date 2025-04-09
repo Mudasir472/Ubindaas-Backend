@@ -39,6 +39,9 @@ const ratingApiRoutes = require('./routes/api/ratingRoutes'); // New rating API 
 const customerApiRoutes = require('./routes/api/customersRoutes')
 const collectionsApiRoutes = require('./routes/api/collectionRoutes')
 const storyRoutes = require('./routes/api/storyRoutes')
+const shippingRoutes = require('./routes/api/shippingRoutes')
+const paymentRoutes = require('./routes/api/paymentRoutes')
+
 
 
 // Define CORS options
@@ -115,6 +118,7 @@ app.use('/api/auth', apiAuthRoutes);
 app.use('/api/categories', apiCategoryRoutes);
 app.use('/api/dashboard', apiDashboardRoutes);
 app.use('/api/orders', apiOrderRoutes);
+app.use('/api/payment', paymentRoutes);
 app.use('/api/payments', apiPaymentRoutes);
 app.use('/api/products', apiProductRoutes);
 app.use('/api/settings', apiSettingRoutes);
@@ -124,6 +128,7 @@ app.use('/api/ratings', ratingApiRoutes); // Added API rating routes
 app.use('/api/customer', customerApiRoutes);
 app.use('/api/collection', collectionsApiRoutes);
 app.use('/api/stories', storyRoutes);
+app.use('/api/shipping', shippingRoutes);
 
 
 
@@ -143,6 +148,7 @@ app.get('/test-static', (req, res) => {
 
 // Error Handling Middleware
 const { errorHandler, notFound } = require('./middlewares/errorMiddleware');
+const { getShippingMethods } = require('./controllers/api/settingController');
 app.use(notFound);
 app.use(errorHandler);
 
