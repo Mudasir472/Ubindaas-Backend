@@ -44,9 +44,9 @@ const paymentRoutes = require('./routes/api/paymentRoutes')
 
 
 
-// Define CORS options
+// Define CORS options  "http://localhost:3000"
 const corsOptions = {
-    origin: ["https://ubindaas-beta.vercel.app", "http://localhost:3000"],
+    origin: ["https://ubindaas-beta.vercel.app"],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
