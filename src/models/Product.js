@@ -35,6 +35,9 @@ const ProductSchema = new mongoose.Schema({
         type: Number,
         min: [0, 'Sale price cannot be negative']
     },
+    totalDiscount: {
+        type: Number,
+    },
     images: {
         type: [String],
         required: [true, 'At least one image is required']
@@ -80,7 +83,7 @@ const ProductSchema = new mongoose.Schema({
 });
 
 // Create slug from name and gender before saving
-ProductSchema.pre('save', function(next) {
+ProductSchema.pre('save', function (next) {
     if (!this.isModified('name') && !this.isModified('gender') && this.slug) {
         return next();
     }

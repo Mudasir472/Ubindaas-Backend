@@ -50,9 +50,9 @@ exports.createProductForm = async (req, res) => {
             return res.redirect('/admin/products?gender=men');
         }
 
-        const categories = await Category.find({ 
-            gender: gender.toLowerCase(), 
-            status: 'active' 
+        const categories = await Category.find({
+            gender: gender.toLowerCase(),
+            status: 'active'
         });
 
         res.render('admin/products/create', {
@@ -98,12 +98,18 @@ exports.createProduct = async (req, res) => {
         // Handle images and video
         const images = req.files && req.files.images ? req.files.images.map(file => file.filename) : [];
         const video = req.files && req.files.video && req.files.video.length > 0 ? req.files.video[0].filename : null;
-        
+
         if (images.length === 0) {
             req.flash('error_msg', 'At least one image is required');
             return res.redirect(`/admin/products/create?gender=${gender}`);
         }
+        // Calculate total discount percentage
+        let totalDiscount = 0;
 
+        if (price && salePrice && price > 0) {
+            totalDiscount = ((price - salePrice) / price) * 100;
+            totalDiscount = Math.round(totalDiscount); // Optional: round to nearest whole number
+        }
         // Create the product
         const newProduct = await Product.create({
             name,
@@ -112,6 +118,7 @@ exports.createProduct = async (req, res) => {
             category,
             price: parseFloat(price),
             salePrice: salePrice ? parseFloat(salePrice) : undefined,
+            totalDiscount,
             images,
             video,
             sizes: Array.isArray(sizes) ? sizes : [sizes],
@@ -129,7 +136,7 @@ exports.createProduct = async (req, res) => {
         res.redirect(`/admin/products?gender=${gender.toLowerCase()}`);
     } catch (error) {
         console.error('Error in createProduct:', error);
-        
+
         // Clean up uploaded files in case of error
         if (req.files) {
             if (req.files.images) {
@@ -141,12 +148,12 @@ exports.createProduct = async (req, res) => {
                 await deleteFile(req.files.video[0].filename, true);
             }
         }
-        
+
         req.flash('error_msg', 'Error creating product: ' + error.message);
         res.redirect(`/admin/products/create?gender=${req.query.gender}`);
     }
 };
-    
+
 // Show edit form
 exports.editProductForm = async (req, res) => {
     try {
@@ -156,13 +163,13 @@ exports.editProductForm = async (req, res) => {
             return res.redirect('/admin/products');
         }
 
-        const categories = await Category.find({ 
-            gender: product.gender, 
-            status: 'active' 
+        const categories = await Category.find({
+            gender: product.gender,
+            status: 'active'
         });
 
         // Get rating information for the product
-        const ratingsCount = await Rating.countDocuments({ 
+        const ratingsCount = await Rating.countDocuments({
             productId: product._id,
             status: 'approved'
         });
@@ -222,13 +229,13 @@ exports.updateProduct = async (req, res) => {
 
         // Handle video
         let videoFilename = product.video;
-        
+
         // Remove existing video if requested
         if (removeVideo === 'true' && product.video) {
             await deleteFile(product.video, true);
             videoFilename = null;
         }
-        
+
         // Add new video if uploaded
         if (req.files && req.files.video && req.files.video.length > 0) {
             // Delete old video if exists
@@ -275,7 +282,7 @@ exports.deleteProduct = async (req, res) => {
         for (const image of product.images) {
             await deleteFile(image);
         }
-        
+
         // Delete video if exists
         if (product.video) {
             await deleteFile(product.video, true);
@@ -286,7 +293,7 @@ exports.deleteProduct = async (req, res) => {
 
         // Delete the product
         await Product.findByIdAndDelete(req.params.id);
-        
+
         return res.json({ success: true, message: 'Product deleted successfully' });
     } catch (error) {
         console.error('Error in deleteProduct:', error);
@@ -298,7 +305,7 @@ exports.deleteProduct = async (req, res) => {
 exports.deleteProductImage = async (req, res) => {
     try {
         const { id, filename } = req.params;
-        
+
         const product = await Product.findById(id);
         if (!product) {
             return res.status(404).json({ success: false, message: 'Product not found' });
@@ -306,9 +313,9 @@ exports.deleteProductImage = async (req, res) => {
 
         // Check if this is the last image
         if (product.images.length <= 1) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Cannot delete the last image. Product must have at least one image.' 
+            return res.status(400).json({
+                success: false,
+                message: 'Cannot delete the last image. Product must have at least one image.'
             });
         }
 
@@ -330,22 +337,22 @@ exports.deleteProductImage = async (req, res) => {
 exports.deleteProductVideo = async (req, res) => {
     try {
         const { id } = req.params;
-        
+
         const product = await Product.findById(id);
         if (!product) {
             return res.status(404).json({ success: false, message: 'Product not found' });
         }
 
         if (!product.video) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'No video exists for this product' 
+            return res.status(400).json({
+                success: false,
+                message: 'No video exists for this product'
             });
         }
 
         // Delete the video file
         await deleteFile(product.video, true);
-        
+
         // Remove video reference and save
         product.video = null;
         await product.save();
@@ -362,32 +369,32 @@ exports.viewProductRatings = async (req, res) => {
     try {
         const productId = req.params.id;
         const product = await Product.findById(productId);
-        
+
         if (!product) {
             req.flash('error_msg', 'Product not found');
             return res.redirect('/admin/products');
         }
-        
+
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
         const status = req.query.status || 'all';
-        
+
         // Build query
         const query = { productId: productId };
         if (status !== 'all') {
             query.status = status;
         }
-        
+
         // Get total count
         const total = await Rating.countDocuments(query);
-        
+
         // Get ratings
         const ratings = await Rating.find(query)
             .populate('userId', 'name email')
             .sort({ createdAt: -1 })
             .skip((page - 1) * limit)
             .limit(limit);
-        
+
         res.render('admin/products/ratings', {
             product,
             ratings,
@@ -411,39 +418,39 @@ exports.updateRatingStatus = async (req, res) => {
     try {
         const { id } = req.params;
         const { status } = req.body;
-        
+
         if (!['pending', 'approved', 'rejected'].includes(status)) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Invalid status value' 
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid status value'
             });
         }
-        
+
         const rating = await Rating.findById(id);
-        
+
         if (!rating) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'Rating not found' 
+            return res.status(404).json({
+                success: false,
+                message: 'Rating not found'
             });
         }
-        
+
         // Update status
         rating.status = status;
         await rating.save();
-        
+
         // Update product average rating if status changed
         await updateProductAverageRating(rating.productId);
-        
-        return res.json({ 
-            success: true, 
-            message: `Rating ${status} successfully` 
+
+        return res.json({
+            success: true,
+            message: `Rating ${status} successfully`
         });
     } catch (error) {
         console.error('Error in updateRatingStatus:', error);
-        return res.status(500).json({ 
-            success: false, 
-            message: 'Error updating rating status' 
+        return res.status(500).json({
+            success: false,
+            message: 'Error updating rating status'
         });
     }
 };
@@ -453,28 +460,28 @@ async function updateProductAverageRating(productId) {
     try {
         const result = await Rating.aggregate([
             { $match: { productId: productId, status: 'approved' } },
-            { 
-                $group: { 
-                    _id: null, 
+            {
+                $group: {
+                    _id: null,
                     averageRating: { $avg: '$rating' },
-                    count: { $sum: 1 } 
-                } 
+                    count: { $sum: 1 }
+                }
             }
         ]);
-        
+
         let avgRating = 0;
         let ratingCount = 0;
-        
+
         if (result.length > 0) {
             avgRating = Math.round(result[0].averageRating * 10) / 10; // Round to 1 decimal place
             ratingCount = result[0].count;
         }
-        
-        await Product.findByIdAndUpdate(productId, { 
+
+        await Product.findByIdAndUpdate(productId, {
             averageRating: avgRating,
-            ratingCount: ratingCount 
+            ratingCount: ratingCount
         });
-        
+
     } catch (error) {
         console.error('Error updating product average rating:', error);
     }

@@ -1,3 +1,4 @@
+const Category = require('../../models/Category');
 const Product = require('../../models/Product');
 const Rating = require('../../models/Rating');
 
@@ -15,7 +16,7 @@ exports.getProducts = async (req, res) => {
 
         // Build query
         let query = { status: 'active' };
-        
+
         if (gender) {
             query.gender = gender.toLowerCase();
         }
@@ -91,7 +92,7 @@ exports.getProductById = async (req, res) => {
 exports.getRelatedProducts = async (req, res) => {
     try {
         const product = await Product.findById(req.params.id);
-        
+
         if (!product) {
             return res.status(404).json({
                 success: false,
@@ -105,8 +106,8 @@ exports.getRelatedProducts = async (req, res) => {
             gender: product.gender,
             status: 'active'
         })
-        .limit(4)
-        .populate('category');
+            .limit(4)
+            .populate('category');
 
         res.json({
             success: true,
@@ -124,7 +125,7 @@ exports.getRelatedProducts = async (req, res) => {
 exports.searchProducts = async (req, res) => {
     try {
         const query = req.query.q;
-        
+
         if (!query) {
             return res.status(400).json({
                 success: false,
@@ -143,8 +144,8 @@ exports.searchProducts = async (req, res) => {
                 }
             ]
         })
-        .populate('category')
-        .limit(10);
+            .populate('category')
+            .limit(10);
 
         res.json({
             success: true,
@@ -159,28 +160,54 @@ exports.searchProducts = async (req, res) => {
     }
 };
 
+exports.getAllProductsCategory = async (req, res) => {
+    try {
+        const { gender, name } = req.query;
+
+        if (!gender || !name) {
+            return res.status(400).json({ message: "Gender and name are required." });
+        }
+
+        const category = await Category.findOne({
+            gender: gender.toLowerCase(),
+            name: { $regex: new RegExp(`^${name}$`, 'i') } // case-insensitive exact match
+        });
+
+        if (!category) {
+            return res.status(404).json({ message: "Category not found" });
+        }
+
+        const products = await Product.find({ category: category._id });
+
+        res.status(200).json({ data: products });
+    } catch (err) {
+        console.error("Error fetching products:", err);
+        res.status(500).json({ message: "Internal server error" });
+    }
+}
+
 exports.getProductsByCategory = async (req, res) => {
     try {
         const categoryId = req.params.categoryId;
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 12;
-        
+
         // Build query
-        const query = { 
+        const query = {
             category: categoryId,
             status: 'active'
         };
-        
+
         // Get total count
         const total = await Product.countDocuments(query);
-        
+
         // Execute query
         const products = await Product.find(query)
             .populate('category')
             .sort({ createdAt: -1 })
             .skip((page - 1) * limit)
             .limit(limit);
-            
+
         res.json({
             success: true,
             data: {
@@ -202,15 +229,15 @@ exports.getProductsByCategory = async (req, res) => {
 exports.getFeaturedProducts = async (req, res) => {
     try {
         const limit = parseInt(req.query.limit) || 8;
-        
-        const products = await Product.find({ 
+
+        const products = await Product.find({
             featured: true,
             status: 'active'
         })
-        .populate('category')
-        .sort({ createdAt: -1 })
-        .limit(limit);
-        
+            .populate('category')
+            .sort({ createdAt: -1 })
+            .limit(limit);
+
         res.json({
             success: true,
             data: products
@@ -230,16 +257,16 @@ exports.getTopRatedProducts = async (req, res) => {
         const limit = parseInt(req.query.limit) || 8;
         const minRating = parseFloat(req.query.minRating) || 4.0;
         const minReviews = parseInt(req.query.minReviews) || 1;
-        
-        const products = await Product.find({ 
+
+        const products = await Product.find({
             status: 'active',
             averageRating: { $gte: minRating },
             ratingCount: { $gte: minReviews }
         })
-        .populate('category')
-        .sort({ averageRating: -1, ratingCount: -1 })
-        .limit(limit);
-        
+            .populate('category')
+            .sort({ averageRating: -1, ratingCount: -1 })
+            .limit(limit);
+
         res.json({
             success: true,
             data: products
@@ -259,35 +286,35 @@ exports.getProductRatings = async (req, res) => {
         const productId = req.params.id;
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 5;
-        
+
         // Get approved ratings for the product
         const ratings = await Rating.find({
             productId: productId,
             status: 'approved'
         })
-        .populate('userId', 'name avatar')
-        .sort({ createdAt: -1 })
-        .skip((page - 1) * limit)
-        .limit(limit);
-        
+            .populate('userId', 'name avatar')
+            .sort({ createdAt: -1 })
+            .skip((page - 1) * limit)
+            .limit(limit);
+
         // Get total count
         const total = await Rating.countDocuments({
             productId: productId,
             status: 'approved'
         });
-        
+
         // Get rating distribution
         const distribution = await Rating.aggregate([
             { $match: { productId: mongoose.Types.ObjectId(productId), status: 'approved' } },
             { $group: { _id: '$rating', count: { $sum: 1 } } }
         ]);
-        
+
         // Format distribution
         const formattedDistribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
         distribution.forEach(item => {
             formattedDistribution[item._id] = item.count;
         });
-        
+
         res.json({
             success: true,
             data: {
